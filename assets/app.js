@@ -373,10 +373,48 @@
   }
   const WD_STRIP = /(周[一二三四五六日天]|星期[一二三四五六日天1-7]|每天|每日|全周|工作日|周一到周日|周一至周日|周一~周日)/g;
   const AMPM_STRIP = /(上午|下午|早上|早晨|中午|傍晚|晚上|凌晨)/g;
+  // PDF worker 配置（避免主线程 fake worker 警告/失败）
+  if (window.pdfjsLib) {
+    try { pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"; } catch (e) {}
+  }
+  // SOP 文件 → 文本：PDF 走 pdf.js 抽取文本，其余按文本读取
+  async function extractSopText(file) {
+    const name = (file.name || '').toLowerCase();
+    if (file.type === 'application/pdf' || name.endsWith('.pdf')) {
+      if (!window.pdfjsLib) { alert('PDF 解析库未加载，请刷新页面或检查网络后重试'); return null; }
+      try {
+        const buf = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        let txt = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const c = await page.getTextContent();
+          if (c && c.items) txt += c.items.map(it => it.str || '').join(' ') + '\n\n';
+        }
+        const t = txt.trim();
+        if (t.length < 20) {
+          alert('该 PDF 文本提取过少（可能为扫描件/图片型 PDF）。请转成可复制文字的 PDF，或导出为 .txt/.md 后上传。');
+          return null;
+        }
+        return t;
+      } catch (err) {
+        alert('PDF 解析失败：' + (err && err.message ? err.message : err) + '；请确认文件未损坏，或改用 .txt/.md 上传。');
+        return null;
+      }
+    }
+    // 文本类（.md / .txt / .json）
+    return await new Promise((res) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result));
+      r.onerror = () => res(null);
+      r.readAsText(file);
+    });
+  }
   function parseSop(text) {
     const items = [];
     const lines = text.split(/\r?\n/);
     let cur = null;
+    let curWeekday = null; // 星期上下文：纯「周三」类标题行只更新上下文，供后续时间条目归属当天
     const commit = () => {
       if (cur && (cur.time || cur.text)) {
         if (!cur.text) cur.text = 'SOP 事项';
@@ -390,20 +428,22 @@
       if (!clean) continue; // 空行：保持当前条目打开
       const t = findTime(clean);
       const wd = findWeekday(clean);
+      // 纯星期标题行（无时间）→ 仅更新星期上下文，供后续带时间的条目归属到当天
+      if (!t && wd != null) { curWeekday = wd; continue; }
       if (t) {
         commit();
         const txt = clean
           .replace(t.raw, '')
           .replace(AMPM_STRIP, '')
           .replace(WD_STRIP, '')
-          .replace(/^[\s、,，.。\-*•]+/, '')
+          .replace(/^[\s、,，.。:：\-*•]+/, '')
           .replace(/\s+/g, ' ').trim();
-        cur = { weekday: wd, time: pad(t.h) + ':' + pad(t.mi), text: txt };
+        cur = { weekday: (wd != null ? wd : curWeekday), time: pad(t.h) + ':' + pad(t.mi), text: txt };
       } else if (cur && (isList || /^\s+/.test(raw))) {
         // 续行（子项 / 缩进说明）并入当前条目
         if (clean) cur.text = (cur.text ? cur.text + '；' : '') + clean.replace(AMPM_STRIP, '').replace(WD_STRIP, '').replace(/\s+/g, ' ').trim();
       }
-      // 其余独立行（如纯标题「## 周二」）忽略，避免误建节点
+      // 其余独立行（非星期标题的纯标题）忽略，避免误建节点
     }
     commit();
     return items;
@@ -484,7 +524,7 @@
     html += '<div style="font-size:18px;font-weight:700;margin-bottom:4px;">我的 SOP</div>';
     html += '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;">左侧时间轴为自动提取的定时节点（用于弹窗提醒）；下方为完整文档渲染。通用版每周重复执行；右侧可上传更新，具体内容每周手动替换。</div>';
     if (!sop || !sop.raw) {
-      html += '<div class="card" style="color:var(--muted);">尚未上传 SOP 文件。点击右侧「上传 SOP 文件」选择 .md / .txt / .json。</div>';
+      html += '<div class="card" style="color:var(--muted);">尚未上传 SOP 文件。点击右侧「上传 SOP 文件」选择 .md / .txt / .json / .pdf。</div>';
     } else {
       html += `<div class="card md-card">${renderMarkdown(sop.raw)}</div>`;
     }
@@ -493,20 +533,17 @@
   }
 
   $('#uploadSopBtn').addEventListener('click', () => $('#sopFile').click());
-  $('#sopFile').addEventListener('change', (e) => {
+  $('#sopFile').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const text = String(reader.result);
-      const items = parseSop(text);
-      setSop({ name: file.name, raw: text, items, updated: new Date().toISOString() });
-      renderSopTimeline();
-      if (currentModule === 'sop') renderSopCenter();
-      alert('SOP 已解析并保存（' + items.length + ' 个时间节点）。');
-    };
-    reader.readAsText(file);
     e.target.value = '';
+    const text = await extractSopText(file);
+    if (text == null) return; // 提取失败（已在函数内提示）
+    const items = parseSop(text);
+    setSop({ name: file.name, raw: text, items, updated: new Date().toISOString() });
+    renderSopTimeline();
+    if (currentModule === 'sop') renderSopCenter();
+    alert('SOP 已解析并保存（' + items.length + ' 个时间节点）。');
   });
   $('#clearSopBtn').addEventListener('click', () => {
     const sop = getSop();

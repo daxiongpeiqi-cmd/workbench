@@ -84,6 +84,8 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("setup").style.display = "block";
     window.scrollTo(0, 0);
   });
+  // 再做一份：清空已填信息并跳回表单（方便连续给多个学生出报告）
+  document.getElementById("redoBtn").addEventListener("click", resetForNewReport);
 
   // 修正弹窗
   document.getElementById("correctBtn").addEventListener("click", openCorrect);
@@ -394,6 +396,19 @@ async function submitCorrect() {
 
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 function setProgress(t) { const el = document.getElementById("progress"); if (el) el.textContent = t; }
+
+// 再做一份：清空上一份填写（成绩/文本输入/上传材料），回到表单页（年级省份等下拉保留，便于连续出报告）
+function resetForNewReport() {
+  document.querySelectorAll(".score-row").forEach(r => { const v = r.querySelector(".sc-val"); if (v) v.value = ""; });
+  ["combo", "target", "teachers", "extraInfo"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+  uploads.material = [];
+  renderFileList();
+  endLiveStream();
+  setProgress("");
+  document.getElementById("reportPage").style.display = "none";
+  document.getElementById("setup").style.display = "block";
+  window.scrollTo(0, 0);
+}
 
 // 如果 JSON 被截断，用「续写」方式让模型接着输出
 async function completeJSONIfTruncated(raw, ctx, extra) {
