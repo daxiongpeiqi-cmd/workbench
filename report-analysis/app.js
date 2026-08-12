@@ -347,7 +347,7 @@ function renderBoth(data) {
 }
 
 // ---------- 修正 / 补充 ----------
-const REPORT_CORRECT_SYSTEM = "你是严谨的学业规划报告编辑助手。用户给出已有报告 JSON 与若干修正意见，请据此修订对应字段，其他字段原样保留，输出完整 JSON（结构同原报告：portrait/subjects/plan/adapt_checklist/teacher_advice/target_outlook/parent_words）。严禁编造分数、严禁出现其他机构名、严禁硬广。仅输出 JSON 本身。";
+const REPORT_CORRECT_SYSTEM = "你是严谨的学业规划报告编辑助手。用户给出已有报告 JSON 与若干修正意见，请据此修订对应字段，其他字段原样保留，输出完整 JSON（结构同原报告：portrait/subjects/plan/adapt_checklist/teacher_advice/target_outlook/parent_words）。注意 plan 是对象{overview:字符串, stages:数组(阶段/时间锚点/重点任务/里程碑), actions:数组(关键动作)}，修订时保持该结构不可拍平为字符串。严禁编造分数、严禁出现其他机构名、严禁硬广。仅输出 JSON 本身。";
 function openCorrect() {
   if (!CURRENT_REPORT) return alert("请先生成报告");
   document.getElementById("correctModal").style.display = "flex";

@@ -45,17 +45,42 @@ function renderReport(data, mode) {
     </div>`;
   }
 
-  // 3) 学年规划（+ 高一适应期清单）
-  h += `<div class="${P}rp-block">
-    <div class="${P}rp-h">③ 学年规划</div>
-    <div class="${P}rp-p">${esc(data.plan || "")}</div>`;
-  if (data.adapt_checklist && data.adapt_checklist.length) {
-    h += `<div class="${P}rp-check">
-      <div class="${P}rp-sub">适应期观察清单</div>
-      <ul>${data.adapt_checklist.map(c => `<li>${esc(c)}</li>`).join("")}</ul>
-    </div>`;
+  // 3) 学年规划（分层：总览 + 阶段表 + 关键动作 + 高一适应期清单）
+  const plan = data.plan;
+  if (plan) {
+    let planHtml = "";
+    if (typeof plan === "string") {
+      planHtml = `<div class="${P}rp-p">${esc(plan)}</div>`;
+    } else {
+      if (plan.overview) planHtml += `<div class="${P}rp-plan-overview">${esc(plan.overview)}</div>`;
+      if (plan.stages && plan.stages.length) {
+        const srows = plan.stages.map(st => `<tr>
+          <td class="${P}rp-phase">${esc(st.phase || "")}</td>
+          <td>${esc(st.anchor || "")}</td>
+          <td>${esc(st.focus || "")}</td>
+          <td>${esc(st.output || "")}</td>
+        </tr>`).join("");
+        planHtml += `<table class="${P}rp-tbl rp-plan-tbl">
+          <thead><tr><th>阶段</th><th>时间锚点</th><th>重点任务</th><th>里程碑 / 产出</th></tr></thead>
+          <tbody>${srows}</tbody>
+        </table>`;
+      }
+      if (plan.actions && plan.actions.length) {
+        planHtml += `<div class="${P}rp-sub">关键动作</div>
+        <ul class="${P}rp-list">${plan.actions.map(a => `<li>${esc(a)}</li>`).join("")}</ul>`;
+      }
+    }
+    h += `<div class="${P}rp-block">
+      <div class="${P}rp-h">③ 学年规划</div>
+      ${planHtml}`;
+    if (data.adapt_checklist && data.adapt_checklist.length) {
+      h += `<div class="${P}rp-check">
+        <div class="${P}rp-sub">适应期观察清单</div>
+        <ul>${data.adapt_checklist.map(c => `<li>${esc(c)}</li>`).join("")}</ul>
+      </div>`;
+    }
+    h += `</div>`;
   }
-  h += `</div>`;
 
   // 4) 老师建议（仅选了老师）
   if (data.teacher_advice && data.teacher_advice.length) {

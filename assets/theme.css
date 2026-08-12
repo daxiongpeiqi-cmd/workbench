@@ -269,6 +269,8 @@ input,textarea,select{font-family:inherit;}
   color:var(--text); border:1px solid var(--glass-border); box-shadow:var(--glass-shadow-soft);
 }
 .btn.ghost:hover{background:var(--primary); color:#fff; border-color:rgba(255,255,255,.4); transform:translateY(-2px) scale(1.02);}
+.btn.ghost.danger{color:#dc2626; border-color:rgba(220,38,38,.35);}
+.btn.ghost.danger:hover{background:#dc2626; color:#fff; border-color:rgba(220,38,38,.6);}
 .input,textarea,select{
   width:100%; padding:9px 12px; border:1px solid var(--glass-border); border-radius:var(--radius-xs);
   background:var(--glass-strong); backdrop-filter:var(--blur); -webkit-backdrop-filter:var(--blur);

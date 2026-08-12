@@ -508,6 +508,20 @@
     reader.readAsText(file);
     e.target.value = '';
   });
+  $('#clearSopBtn').addEventListener('click', () => {
+    const sop = getSop();
+    if (!sop || !sop.raw) { alert('当前没有 SOP 内容可清除。'); return; }
+    if (!confirm('确定清空全部 SOP 内容吗？此操作不可撤销，方便你重新上传或粘贴新版。')) return;
+    LS.removeItem('wb_sop');
+    // 同时清除勾选完成标记，避免重传后残留旧状态
+    for (let i = LS.length - 1; i >= 0; i--) {
+      const k = LS.key(i);
+      if (k && k.indexOf('sopDone_') === 0) LS.removeItem(k);
+    }
+    renderSopTimeline();
+    if (currentModule === 'sop') renderSopCenter();
+    alert('SOP 已清空，你可以重新上传或粘贴新版。');
+  });
 
   /* ---------------- 备忘录 ---------------- */
   function getMemos() {
