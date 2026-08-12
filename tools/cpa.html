@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPA学校数据检索系统</title>
+<style>
+  :root{
+    --primary:#1e40af; --primary2:#0ea5e9; --accent:#0ea5e9;
+    --bg:#eef2f7; --panel:#fff; --border:#e2e8f0; --line:#eef1f5;
+    --text:#0f172a; --muted:#64748b; --rowalt:#f8fafc;
+    --green:#16a34a; --yellow:#d97706; --red:#dc2626;
+    --lv1:#2563eb; --lv2:#3b82f6; --lv3:#60a5fa; --lv4:#94a3b8; --lv5:#a855f7; --lv6:#d97706; --lv7:#cbd5e1;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+       background:var(--bg);color:var(--text);}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px 60px;}
+
+  /* 顶部品牌栏 */
+  .topbar{background:linear-gradient(110deg,var(--primary) 0%,#1d4ed8 45%,var(--primary2) 100%);
+          color:#fff;padding:18px 22px;box-shadow:0 4px 18px rgba(30,64,175,.22);position:sticky;top:0;z-index:50;}
+  .topbar-inner{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .logo{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.16);
+        display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;letter-spacing:.5px;
+        border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(2px);}
+  .brand h1{margin:0;font-size:20px;font-weight:800;letter-spacing:1px;}
+  .brand .sub{font-size:12.5px;opacity:.85;margin-top:3px;}
+  .nav{margin-left:auto;display:flex;gap:8px;background:rgba(255,255,255,.14);padding:5px;border-radius:11px;}
+  .nav-btn{border:none;background:transparent;color:#fff;padding:9px 18px;font-size:14px;font-weight:600;
+           border-radius:8px;cursor:pointer;transition:all .15s;opacity:.85;}
+  .nav-btn:hover{opacity:1;}
+  .nav-btn.active{background:#fff;color:var(--primary);opacity:1;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+
+  /* 工具栏 */
+  .toolbar{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:20px 0 14px;}
+  .toolbar .group{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);
+                  border-radius:12px;padding:10px 14px;box-shadow:0 1px 4px rgba(15,23,42,.04);}
+  .group .lbl{font-size:13px;color:var(--muted);font-weight:600;}
+  .issue-btn{border:1px solid var(--border);background:#fff;color:#334155;padding:8px 16px;font-size:14px;
+             font-weight:600;border-radius:9px;cursor:pointer;transition:all .14s;}
+  .issue-btn:hover{border-color:var(--primary2);color:var(--primary);}
+  .issue-btn.active{background:linear-gradient(110deg,var(--primary),var(--primary2));color:#fff;border-color:transparent;
+                    box-shadow:0 3px 10px rgba(14,165,233,.35);}
+  .issue-meta{font-size:13px;color:var(--muted);}
+  .issue-meta b{color:var(--primary);}
+
+  /* 卡片 */
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 10px rgba(15,23,42,.05);
+        padding:18px 20px;margin-bottom:18px;}
+  .card-title{font-size:15px;font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .card-title .bar{width:4px;height:16px;background:var(--primary2);border-radius:3px;display:inline-block;}
+
+  /* 图例 */
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:14px;}
+  .legend b{font-weight:700;}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+
+  /* 搜索 + 省份条 */
+  .search-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+  .search-box{position:relative;flex:1;min-width:240px;}
+  .search-box .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--muted);}
+  .search-input{width:100%;padding:11px 14px 11px 40px;font-size:15px;border:1px solid var(--border);border-radius:10px;
+                outline:none;background:#fff;transition:border-color .15s;}
+  .search-input:focus{border-color:var(--primary2);box-shadow:0 0 0 3px rgba(14,165,233,.12);}
+  .prov-bar{display:flex;gap:8px;flex-wrap:wrap;}
+  .prov-btn{padding:7px 14px;border:1px solid var(--border);border-radius:18px;background:#fff;font-size:13.5px;
+            cursor:pointer;color:#334155;transition:all .13s;font-weight:500;}
+  .prov-btn:hover{border-color:var(--primary2);color:var(--primary);}
+  .prov-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+  /* 年级 tab */
+  .tabs{display:flex;gap:10px;margin-bottom:14px;}
+  .tab-btn{border:none;padding:10px 22px;font-size:14px;font-weight:600;border-radius:10px;cursor:pointer;color:#fff;
+           transition:filter .15s;background:#cbd5e1;}
+  .tab-btn[data-tab="g1"]{background:var(--lv1);}
+  .tab-btn[data-tab="g2"]{background:var(--lv2);}
+  .tab-btn[data-tab="g3"]{background:#0891b2;}
+  .tab-btn.active{box-shadow:0 0 0 3px rgba(14,165,233,.25);filter:brightness(1.06);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  /* 树 */
+  .tree{border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+  .province{border-bottom:1px solid var(--border);}
+  .province:last-child{border-bottom:none;}
+  .province-head{display:flex;align-items:center;gap:10px;padding:13px 18px;background:#f1f5fb;cursor:pointer;
+                 font-weight:700;font-size:15.5px;user-select:none;transition:background .12s;}
+  .province-head:hover{background:#e7eefb;}
+  .province-head .arrow{display:inline-block;width:14px;text-align:center;transition:transform .2s;color:var(--muted);}
+  .province-head.collapsed .arrow{transform:rotate(-90deg);}
+  .province-head .pcount{margin-left:auto;font-size:12px;font-weight:600;color:var(--primary);background:#fff;
+                         border:1px solid #dbeafe;border-radius:20px;padding:3px 12px;}
+  .province-body{display:block;}
+  .province-head.collapsed+.province-body{display:none;}
+  .city{padding-left:26px;border-top:1px solid var(--line);}
+  .city-head{display:flex;align-items:center;gap:8px;padding:9px 18px;cursor:pointer;font-weight:600;font-size:14.5px;
+             color:#334155;user-select:none;}
+  .city-head .arrow{display:inline-block;width:12px;text-align:center;transition:transform .2s;color:var(--muted);font-size:12px;}
+  .city-head.collapsed .arrow{transform:rotate(-90deg);}
+  .city-head .ccount{margin-left:auto;font-size:11.5px;color:var(--muted);background:#f1f5f9;border-radius:8px;padding:2px 9px;}
+  .city-body{display:block;}
+  .city-head.collapsed+.city-body{display:none;}
+  .county{padding-left:22px;}
+  .county-row{display:flex;align-items:baseline;gap:10px;padding:6px 18px;font-size:14px;border-top:1px solid #f5f7fa;}
+  .county-name{font-weight:700;color:#475569;min-width:96px;flex-shrink:0;}
+  .school-list{color:#222;line-height:2;}
+  .school-tag{display:inline-flex;align-items:center;gap:5px;background:var(--rowalt);border:1px solid var(--border);
+              border-radius:6px;padding:4px 11px;margin:3px 5px 3px 0;font-size:13.5px;white-space:nowrap;cursor:pointer;
+              transition:all .12s;}
+  .school-tag:hover{background:#e6eefb;border-color:var(--primary2);transform:translateY(-1px);box-shadow:0 2px 6px rgba(14,165,233,.18);}
+  .lv{display:inline-block;font-size:10px;padding:1px 7px;border-radius:9px;color:#fff;font-weight:600;}
+  .rtag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:9px;color:#fff;font-weight:700;background:#e11d48;margin-left:3px;}
+
+  .unknown-section{margin-top:16px;border:1px solid #f0d8b8;border-radius:12px;overflow:hidden;background:#fffdf9;}
+  .unknown-head{padding:13px 18px;background:#fef3e7;font-weight:700;font-size:14.5px;color:#b45309;cursor:pointer;
+                display:flex;align-items:center;gap:8px;}
+  .unknown-head .arrow{transition:transform .2s;}
+  .unknown-head.collapsed .arrow{transform:rotate(-90deg);}
+  .unknown-body{padding:12px 18px;}
+  .unknown-head.collapsed+.unknown-body{display:none;}
+  .unknown-body .school-tag{background:#fff8ef;border-color:#f0d8b8;}
+
+  .note{margin-top:18px;padding:14px 18px;background:#fff;border-left:4px solid var(--primary2);border-radius:0 8px 8px 0;
+        font-size:12.5px;color:#556;line-height:1.8;}
+
+  /* 弹窗 */
+  .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;
+                 z-index:100;padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:#fff;border-radius:16px;max-width:480px;width:100%;padding:22px;max-height:86vh;overflow-y:auto;
+         box-shadow:0 20px 50px rgba(0,0,0,.3);}
+  .modal h3{margin:0 0 6px;font-size:20px;color:var(--primary);word-break:break-all;}
+  .modal .badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:11px;margin:0 5px 10px 0;color:#fff;font-weight:600;}
+  .modal .row{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:14px;}
+  .modal .row .k{color:var(--muted);min-width:80px;flex-shrink:0;font-weight:600;}
+  .modal .row .v{color:#1e293b;flex:1;word-break:break-all;line-height:1.65;}
+  .modal .close{margin-top:16px;width:100%;padding:12px;background:linear-gradient(110deg,var(--primary),var(--primary2));
+                color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;}
+
+  /* 仪表盘 */
+  .dash-grid{display:grid;grid-template-columns:1fr;gap:18px;}
+  .bar-row{display:flex;align-items:center;gap:14px;padding:7px 0;}
+  .bar-name{width:120px;flex-shrink:0;font-size:13.5px;font-weight:600;color:#334155;text-align:right;}
+  .bar-track{flex:1;background:#f1f5f9;border-radius:8px;height:26px;overflow:hidden;position:relative;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2));border-radius:8px;
+            transition:width .5s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;}
+  .bar-val{color:#fff;font-size:12.5px;font-weight:700;}
+  .bar-row.unknown .bar-name{color:#b45309;}
+  .bar-row.unknown .bar-fill{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+
+  table.cmp{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.cmp th,table.cmp td{padding:10px 12px;text-align:center;border-bottom:1px solid var(--line);}
+  table.cmp thead th{background:#f1f5fb;color:#334155;font-weight:700;position:sticky;top:0;}
+  table.cmp tbody td:first-child{text-align:left;font-weight:600;color:#334155;background:#fafcff;}
+  table.cmp td.cell{border-radius:0;}
+  .cmp-tip{font-size:12.5px;color:var(--muted);margin-bottom:10px;line-height:1.7;}
+  .hidden{display:none !important;}
+  .section-sub{font-size:13px;color:var(--muted);margin:-6px 0 14px;}
+.deploy-status{position:fixed;top:96px;right:14px;z-index:100;background:rgba(255,255,255,.96);
+  border:1px solid var(--border);border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,.12);
+  padding:10px 13px;width:230px;font-size:12px;color:var(--text);backdrop-filter:blur(4px);}
+.deploy-status .t-row{display:flex;justify-content:space-between;align-items:baseline;margin:3px 0;}
+.deploy-status .t-label{color:var(--muted);font-size:11px;}
+.deploy-status .t-val{font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;letter-spacing:.5px;}
+.deploy-status .tag{display:block;margin-top:8px;padding:5px 10px;border-radius:999px;
+  font-size:12.5px;font-weight:700;color:#fff;text-align:center;}
+.deploy-status .tag.green{background:var(--green);}
+.deploy-status .tag.yellow{background:var(--yellow);}
+.deploy-status .tag.red{background:var(--red);}
+.deploy-status .hint{margin-top:6px;font-size:10.5px;color:var(--muted);line-height:1.45;}
+</style>
+</head>
+<body>
+
+<div class="deploy-status" id="deployStatus">
+  <div class="t-row"><span class="t-label">UTC 时间</span><span class="t-val" id="utcTime">--:--:--</span></div>
+  <div class="t-row"><span class="t-label">北京时间</span><span class="t-val" id="bjTime">--:--:--</span></div>
+  <span class="tag" id="chStatus">检测中</span>
+  <div class="hint" id="chHint"></div>
+</div>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="logo">CPA</div>
+    <div class="brand">
+      <h1>CPA学校数据检索系统</h1>
+      <div class="sub">生源学校 · 地区 / 等级 / 升学检索 · 按周次（每周周四）归档</div>
+    </div>
+    <div class="nav">
+      <button class="nav-btn active" data-view="search">检索系统</button>
+      <button class="nav-btn" data-view="dash">仪表盘</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- 工具栏：期次 -->
+  <div class="toolbar">
+    <div class="group">
+      <span class="lbl">期次</span>
+      <div id="issueBtns" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    </div>
+    <div class="issue-meta" id="issueMeta"></div>
+  </div>
+
+  <!-- 检索视图 -->
+  <section id="view-search">
+    <div class="card">
+      <div class="card-title"><span class="bar"></span>检索与浏览</div>
+      <div class="section-sub">顶部可<strong>搜索校名</strong>，或点<strong>省份快捷条</strong>只看该省；点任意校名弹窗看完整详情（等级 / 本科率 / 分班）。数据按「期次」隔离，互不交叉。</div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--green)"></span><b>公开</b> 有公开升学数据</span>
+        <span><span class="dot" style="background:var(--yellow)"></span><b>估测</b> 县级未公开，按层级给区间</span>
+        <span><span class="dot" style="background:var(--red)"></span><b>待核实</b> 校名/地区存疑</span>
+      </div>
+      <div class="search-row">
+        <div class="search-box"><span class="ic">🔍</span>
+          <input class="search-input" id="searchBox" placeholder="搜索校名，如：平凉一中 / 华山中学" />
+        </div>
+      </div>
+      <div class="prov-bar" id="provBar"></div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="g1">新高一</button>
+        <button class="tab-btn" data-tab="g2">新高二</button>
+        <button class="tab-btn" data-tab="g3">新高三</button>
+      </div>
+      <div class="tab-content active" id="g1"></div>
+      <div class="tab-content" id="g2"></div>
+      <div class="tab-content" id="g3"></div>
+    </div>
+
+    <div class="note" id="dataNote"></div>
+  </section>
+
+  <!-- 仪表盘视图 -->
+  <section id="view-dash" class="hidden">
+    <div class="card">
+      <div class="card-title"><span class="bar"></span>当期各省学校分布</div>
+      <div class="section-sub" id="dashSub"></div>
+      <div id="dashBars"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="bar"></span>各期次 × 省份 对比矩阵</div>
+      <div class="cmp-tip">行=省份，列=期次，单元格=该期该省学校数。<span style="color:var(--primary);font-weight:600">底色越深表示数量越多</span>，便于后期横向对比各期生源结构变化。</div>
+      <div style="overflow-x:auto;"><table class="cmp" id="cmpTable"></table></div>
+    </div>
+  </section>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="m-name"></h3>
+    <div id="m-body"></div>
+    <button class="close" onclick="closeModal()">关闭</button>
+  </div>
+</div>
+
+<script>
+const ISSUES = {
+"0813": {
+  "name": "0813期",
+  "date": "2026-08-13",
+  "desc": "首期生源学校核实数据（按截图名单逐所核验）",
+  "data": [
+    {"name":"施甸一中学校","province":"云南","city":"保山","district":"施甸","level":"省示范高中","nature":"公办","grades":"新高一","rates":"未公开精确本科率。层级有依据：1995年认定为云南省二级一等完全中学，2022年12月晋升为云南省一级三等高（完）中（公开）。未检索到官方公布的年度本科率/一本率。知名校友：神舟十六号航天员桂海潮（公开）。估测本科率约60%-80%（估测）","classes":"未公开具体班型，通常设重点班与平行班。公开办学规模：76个教学班，其中高中52个班2512人、初中24个班1083人，在校生3595人","confidence":"估测","note":"官方全称“施甸县第一完全中学”（施甸县教育体育局《义务教育学校名录（初中阶段）》列为“完全中学”，县级教育部门举办），俗称施甸一中。原址为道光三十年（1850）重建的施甸义学馆，1940年正式建校。2022年2月搬迁至甸阳镇沙坝脚社区龙泉路1号新校区，用地480亩，按云南省一级一等高完中标准建设。地区与给定一致。","stage":"完全"},
+    {"name":"施甸县水长学校","province":"云南","city":"保山","district":"施甸(水长乡)","level":"初中","nature":"公办","grades":"新高一","rates":"不适用：该校无高中部，不产生本科率/一本率，故不作估测。可查公开的义务教育质量信息（水长乡2024年政府工作报告，公开）：水长中学九年级在全市排名上升10位，教学质量全县综合排名第八；小学综合成绩全县排名第二。","classes":"公开：中心学校下辖初级中学1所（施甸县水长中学，12个教学班、学生525人）、小学4所（水长乡中心学校、永保小学、小官市小学、九条沟小学，39个教学班）、幼儿园6所（25个班）；2020学年共76个教学班、学生2456人。初中未公开分班方式，通常按成绩编班","confidence":"公开","note":"官方全称“施甸县水长乡中心学校”，国家公办学校、股所级事业单位，施甸县教育体育局二级预算单位，地址施甸县水长乡七〇七（施甸县政府官网公开）。关键提示：该校为义务教育阶段乡镇中心校，无高中部，因此 level 的高中层级分类与“本科率”指标均不适用，故 level 记为“待核实”。若原图实际指向高中，需核对原图。地区与给定一致（水长乡）。","stage":"初中"},
+    {"name":"威信县第二中学","province":"云南","city":"昭通","district":"威信","level":"普通高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开。未检索到官方或权威来源公布的本科率/一本率数据（第三方招生平台的笼统表述无官方出处，不予采信）。估测本科率约40%-60%（估测）","classes":"未公开，通常设重点班与平行班","confidence":"估测","note":"俗称威信二中，公办高中，位于威信县扎西镇。未查到该校获评省/市级示范性高中的官方认定文件，level 按“普通高中”暂定；如需精确请向威信县教育体育局核实。地区与给定一致。","stage":"完全"},
+    {"name":"包九十五中","province":"内蒙古","city":"包头","district":"市辖区","level":"省示范高中","nature":"公办","grades":"新高二","rates":"公开：2008年高考重点率60%、二本率90%；2009年高考重点率61.7%、二本率90%；2012年本科一批上线609人、上线率64.58%；2024年600分以上200人，2025年600分以上307人（学校公开）。近年未公布本科率绝对值；估测本科率约90%以上（估测）。","classes":"设创新班等培优班型；2024年招820人、18个教学班（按选科调整为20个行政班），另有特色项目班100人；实行小班化与分层管理。","confidence":"公开","note":"清单为简称，官方全称“包头市第九十五中学”，前身1960年创办的包钢第一中学，2023年更名，2025年4月划归包头市教育局管理；校址包头市昆都仑区阿尔丁大街（对应清单“市辖区”即昆区）。内蒙古自治区首批重点中学、首批示范性普通高级中学，1991年载入《中国名校》。","stage":"完全"},
+    {"name":"包头市第九十七中","province":"内蒙古","city":"包头","district":"市辖区","level":"省示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开精确本科率/一本率；公开信息仅称“连续三届高考实绩亮眼”“连续多年被评为包头市高中教育教学优秀学校”。估测本科率约45%-65%（估测）。","classes":"2026年招15个教学班670人，实行分层动态管理；其中创新实验班2-3个、每班不超过36人，依据中考六科文化课综合分划定初始名单并动态进出；另设日语实验班、音体美特长班。","confidence":"估测","note":"官方全称“包头市第九十七中学”，前身1972年包钢第五中学（包钢五中），2003年初高中分离，2023年更名；校址包头市昆区友谊大街18号（对应清单“市辖区”即昆区）。内蒙古自治区示范性普通高中。","stage":"完全"},
+    {"name":"包头市第九十八中学","province":"内蒙古","city":"包头","district":"市辖区","level":"省示范高中","nature":"公办","grades":"新高二","rates":"公开（局部）：2024年美术特长生联考本科通过率100%。学校未公布整体本科率/一本率；估测本科率约50%-70%（估测）。","classes":"美术特长生单独编班；另设日语实验班、田径与足球体育项目班，形成“体教融合”分层班型，按中考成绩与专业测试分流。","confidence":"公开","note":"原名包头市田家炳中学，2023年更名为现名；前身1972年二冶三中，历经包建三中、包钢十三中。校址包头市昆都仑区三八路37号（对应清单“市辖区”即昆区）。内蒙古自治区示范性高中、首批全国校园足球特色学校。提示：清单第42项“田家炳”可能即指本校，需核对原图避免重复。","stage":"完全"},
+    {"name":"包头市第六中学","province":"内蒙古","city":"包头","district":"市辖区","level":"省示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"公开（局部）：2026年高考2名学生超600分（最高646分），美术特长生全部双过本科线，体育特长生除1人外均在350分以上；连续多年获包头市高考超额完成任务奖。整体本科率未公开；估测本科率约60%-80%（估测）。","classes":"“四轮驱动”分层育人：物理选科班、历史选科班、俄语小语种班、艺体特长班；实行小班化与分层走班培优扶弱，另有“三五一”教评体系。","confidence":"公开","note":"1956年建校，昆都仑区建校最早的中学，内蒙古自治区示范性高级中学、自治区首批优质高中；校址包头市昆区友谊大街（对应清单“市辖区”即昆区）。教职工218人。","stage":"完全"},
+    {"name":"包头市第九十九中学","province":"内蒙古","city":"包头","district":"市辖区","level":"普通高中","nature":"公办","grades":"新高二 / 新高三","rates":"公开（表述为增幅与升学率，非本科率绝对值）：学校在2026年包头广播《家门口的好学校》节目中称，通过“2345”教学体系实现本科率三年提升45.1个百分点，并有86.6%的学生升入大学（含艺体、含专科）。本科率绝对值未公开；估测本科率约50%-70%（估测）。","classes":"未公开具体班型；实行艺体“两条腿走路”（艺术、体育特长与文化课并行）与毕业班精准分层施策。","confidence":"公开","note":"前身呼和浩特铁路局包头职工子弟第五中学（包铁五中），2023年10月更名；举办单位昆都仑区教育局，校址包头火车站广场北侧（对应清单“市辖区”即昆区）。目前正由完全中学全面转型为普通高级中学。","stage":"完全"},
+    {"name":"宁城鸿蒙高级中学","province":"内蒙古","city":"赤峰","district":"宁城","level":"民办高中","nature":"民办","grades":"新高三","rates":"未公开；建校时间较短（2022年获批高中），未检索到本科率/一本率数据。估测本科率约40%-65%（估测）。","classes":"未公开，通常设重点班与平行班；全寄宿制。","confidence":"估测","note":"办学主体为“宁城县鸿蒙高级中学有限责任公司”，又名宁城县光华实验学校，位于赤峰市宁城县高铁新区，占地106亩，系宁城县委县政府2020年招商引资项目、由江苏沐鑫教育集团投资2亿元兴建的十二年一贯制全寄宿民办学校，2022年成功申报“宁城县鸿蒙高级中学”。","stage":"高中"},
+    {"name":"八里罕中学","province":"内蒙古","city":"赤峰","district":"宁城(八里罕镇)","level":"县重点高中","nature":"公办","grades":"新高二","rates":"公开：2024年高考本科上线人数达1035人；2025年高考本科升学率87.8%；2021年一本上线率较上年增长98.05%（公开）。恢复高考以来累计25名学子考入清华、北大。","classes":"未公开，通常设重点班与平行班；全寄宿封闭管理。","confidence":"公开","note":"官方名“宁城县八里罕中学”（亦称宁城县八里罕高级中学），1955年建校，公办，校址赤峰市宁城县八里罕镇；获“全国教育系统先进集体”“赤峰名学校”称号。","stage":"完全"},
+    {"name":"库伦旗第一中学","province":"内蒙古","city":"通辽","district":"库伦旗","level":"市示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"公开：2023年本科上线率64.8%，2024年71%，2025年77.8%，2026年80%（学校2026年招生简章公开）。特长生升学率超90%。","classes":"2026年招320人（含特长生19人）、设10个常规教学班，实行小班化；其中3个重点班——物理类“卓越班”“启航班”、历史类“凌云班”，由学科骨干教师牵头，定向培养冲刺双一流的尖子生；其余为常规班。","confidence":"公开","note":"1954年建校，公办寄宿制，全旗唯一原民族语言授课普通高中，蒙、汉、英、日四语教学；获“自治区管理先进高中”“市级优质高中”等称号，level 依此归为市示范高中。","stage":"高中"},
+    {"name":"龙井中心学校","province":"吉林","city":"延边","district":"龙井","level":"待核实","nature":"待核实","grades":"新高一","rates":"待核实——具体指向学校未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名存疑，需核对原图（地区按给定保留吉林/延边/龙井）。检索到多个同名或近似候选，无法确定指向：（1）吉林省延边州龙井市老头沟镇中心学校——公办九年一贯制，无高中部；（2）龙井市职业教育中心学校——职业技术学校，龙井市六道河路；（3）河南省信阳市平桥区龙井乡中心学校——同名但不在延边。若原图为“龙井市某镇中心学校”，则多为义务教育阶段，无高中部，本科率不适用。","stage":"待定"},
+    {"name":"四川广安武胜学校","province":"四川","city":"广安","district":"武胜","level":"民办高中","nature":"民办","grades":"新高一 / 新高二 / 新高三","rates":"未公开精确本科率。官方可查信息仅为办学资质与荣誉：非营利性民办十二年一贯制学校（广安市发改委2025年成本监审公示，公开），曾获“广安市普通高中教育先进集体”“全国民办教育百强学校”（公开）。未检索到任何年度本科率/一本率的官方公布数据。估测本科率约50%-70%（估测）","classes":"公开信息显示：部分班级实行小班化教学，实行半军事化管理，设有分层教学与辅导体系；高中部具体班型（是否设实验班/重点班）未公开。通常设重点班与平行班","confidence":"估测","note":"name 取原图主名。经核实，该校在教育与发改部门登记的全称为“广安市武胜超前外国语学校”，地址武胜县沿口镇雅岭路125号，2013年开工、2014年9月开学，举办方为四川超前经济建设有限责任公司，设幼儿园/小学/初中/高中全学段。高中学费15000元/生·年（2025年公示）。地区与给定一致。","stage":"完全"},
+    {"name":"烈面中学","province":"四川","city":"广安","district":"武胜(烈面镇)","level":"省示范高中","nature":"公办","grades":"新高二","rates":"未公开精确本科率。层级有官方依据：2006年2月四川省教育厅《川教[2006]41号》批准“武胜县烈面中学”为四川省示范性普通高中（公开，2006年）；武胜县人民政府官网2026年表述为“四川省二级示范性普通高中”（公开，2026年）。升学率本身未见官方公布。估测本科率约60%-80%（估测）","classes":"未公开具体班型，通常设重点班与平行班。公开信息：58个高中教学班、在校生4000余人；设十大科创兴趣小组，科创教育为特色","confidence":"估测","note":"全称“四川省武胜烈面中学校”，1941年由留德造纸科学家陈晓岚创办（原武胜县私立醇化初级中学），1983年升格高完中，2001年广安市首批示范高中，2005年12月入选四川省示范高中。地区与给定一致。","stage":"完全"},
+    {"name":"攀枝花市第十五中学校（攀枝花市十五中）","province":"四川","city":"攀枝花","district":"市辖区","level":"省示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开精确本科率。层级有官方依据：攀枝花市东区人民政府2022年对区人大第34号建议的答复明确该校“现为四川省二级示范性普通高中”（公开，2022年）。可查累计数据（为累计人数，非年度比率，不可换算为本科率）：累计向高校输送学生2000余人，其中清华北大12人、复旦/中科大/浙大等重点高校246人；连续5年获评攀枝花市“高考突出贡献单位”（公开）。估测本科率约70%-85%（估测）","classes":"未公开具体班型，通常设重点班与平行班。公开：现有52个教学班、学生2568人；面向东区初中学校及东区户籍应届毕业生招生","confidence":"估测","note":"全称“攀枝花市第十五中学校”，1981年创办（原攀矿一中），2008年由原十四中、十五中、十六中高中部合并组建。district 按给定保留“市辖区”；经检索该校实际位于攀枝花市东区瓜子坪成才巷29号，如需精确可改为“东区”。东区正推动其创建四川省特色高中/省一级示范性普通高中。 【去重合并 2026-08-07】库内原有「攀枝花市第十五中」一条，为同一所，已合并。","stage":"完全"},
+    {"name":"丹棱中学","province":"四川","city":"眉山","district":"丹棱","level":"省示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开精确本科率。层级有官方依据：2006年2月四川省教育厅《川教[2006]41号》批准丹棱中学为四川省示范性普通高中（公开，2006年）。可查升学个案：2022年应届理科生文姝锦被清华大学录取，实现该校30多年来清北突破（公开，2022年）。年度本科率/一本率未见官方公布。估测本科率约70%-85%（估测）","classes":"公开：设“端淑班、重本班、本科班”三层，另设高三艺体班与高职单招班，按成绩分层（来源：校长2022年秋季开学讲话，公开）","confidence":"估测","note":"全称“四川省丹棱中学校”，1934年建校，公办。2023年整体迁建新校区（投资6.67亿元、占地167亩），同年成立丹棱中学教育集团并启动创建省一级示范性普通高中。地区与给定一致。","stage":"完全"},
+    {"name":"淮北市烈山区教育中心","province":"安徽","city":"淮北","district":"烈山","level":"职业中学","nature":"公办","grades":"新高二 / 新高三","rates":"中等职业学校，不适用普通高考本科率口径；升学以对口升学（职教高考）/分类考试招生为主，官方未公布升学率数据","classes":"公办中等职业学校，按专业大类编班（面向初中毕业生招生），设升学班与就业班的情况未公开","confidence":"待核实","note":"名单标注为\"淮北市烈山区教育中心(烈山区职业教育中心)\"，公开资料显示其为公办中等职业学校（淮北市烈山区职业教育中心），非普通高中","stage":"待定"},
+    {"name":"蒙阴县第一中学","province":"山东","city":"临沂","district":"蒙阴","level":"省示范高中","nature":"公办","grades":"新高一 / 新高二","rates":"未公开精确本科率；公开信息为山东省规范化学校（原省级示范高中序列），系蒙阴县龙头公办高中；估测本科率约70%-88%，一本(特招线)率约20%-40%（估测）","classes":"县内龙头公办高中，中考录取分数线全县最高，优质生源集中；设创新班/实验班与平行班，按中考成绩分层（细则未公开）","confidence":"估测","note":"官方全称为蒙阴县第一中学，山东省规范化学校在本表归入省示范高中口径","stage":"高中"},
+    {"name":"蒙阴县四中学校","province":"山东","city":"临沂","district":"蒙阴","level":"初中","nature":"公办","grades":"新高一","rates":"检索显示蒙阴县第四中学为公办初级中学，非普通高中，无高考本科率数据","classes":"公办初级中学，按学区招生；分班细则未公开","confidence":"待核实","note":"校名或地区存疑，需核对原图。公开资料显示蒙阴县第四中学为初中，若名单意在高中，蒙阴县普通高中主要为蒙阴一中、蒙阴二中（蒙阴县实验中学）等","stage":"初中"},
+    {"name":"费县实验中学","province":"山东","city":"临沂","district":"费县","level":"省示范高中","nature":"公办","grades":"新高二","rates":"未公开精确本科率；公开信息为山东省规范化学校，系费县主要公办高中之一；估测本科率约60%-80%（估测）","classes":"公办高中，生源为费县中考中上段（与费县一中形成梯队）；未公开分班细则，通常设重点班与平行班","confidence":"估测","note":"山东省规范化学校在本表归入省示范高中口径；该校在部分资料中亦含初中学段，高中部规模与招生情况建议核实","stage":"完全"},
+    {"name":"临清市第二学校","province":"山东","city":"聊城","district":"临清","level":"普通高中","nature":"公办","grades":"新高一","rates":"未公开精确本科率；公开信息为山东省规范化学校序列的公办普通高中；估测本科率约50%-70%（估测）","classes":"临清市公办高中，生源为本市中考中段（次于临清一中）；未公开分班细则，通常设重点班与平行班","confidence":"估测","note":"名单校名\"临清市第二学校\"，对应临清市第二中学；办学层级以公开的省规范化学校表述为依据，逐年高考数据未公开","stage":"完全"},
+    {"name":"临清魏湾镇学校","province":"山东","city":"聊城","district":"临清(魏湾镇)","level":"初中","nature":"公办","grades":"新高一","rates":"检索显示对应的魏湾镇中学为乡镇公办初级中学（九年一贯/初中学段），非普通高中，无高考本科率数据","classes":"乡镇公办学校，按魏湾镇学区招生；分班细则未公开","confidence":"待核实","note":"校名或地区存疑，需核对原图。临清市魏湾镇公开可查的中学为魏湾镇中学（初中），若名单意在高中，需核实是否应为临清一中/临清二中等","stage":"初中"},
+    {"name":"曲沃县二中","province":"山西","city":"临汾","district":"曲沃","level":"普通高中","nature":"公办","grades":"新高三","rates":"未见官方公开的本科率/一本率（第三方资讯站称“艺体类本科上线率85%以上”，无官方来源，不予采信）。估测本科率约40%-60%（估测）。","classes":"未公开，通常设重点班与平行班；兼顾文化课与艺体特长培养，36个教学班、在校生2000余人。","confidence":"估测","note":"官方全称“曲沃县第二高级中学校”，1956年建校，公办寄宿制，曲沃县教育科技局主管，校址乐昌镇府东街1号。","stage":"完全"},
+    {"name":"孝义实验中学","province":"山西","city":"吕梁","district":"孝义","level":"普通高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开；未检索到本科率/一本率数据。估测本科率约35%-55%（估测）。","classes":"未公开，通常设重点班与平行班。","confidence":"估测","note":"官方全称“孝义市实验中学校”，吕梁市《普通高中学校名录》登记为完全中学、教育部门举办（公办）；2023年高中招生计划300人（含定向18人）。","stage":"完全"},
+    {"name":"孝义市第四中学","province":"山西","city":"吕梁","district":"孝义","level":"普通高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开；未检索到学校或教育主管部门发布的本科率数据（部分第三方资讯站称“达线率100%”，无官方来源，不予采信）。估测本科率约40%-60%（估测）。","classes":"2017年起设“行知班”实行小班化精细管理，其余为平行班，按中考成绩分层。","confidence":"估测","note":"官方全称“孝义市第四中学校”，前身1956年兑镇中学，2003/2004年整体迁入城区。吕梁市《普通高中学校名录》登记为高级中学、教育部门举办（公办）。2024年恢复普通高中招生。 【去重合并 2026-08-07】库内原有「孝义市第四中学」一条，为同一所，已合并。注意与「孝义实验中学」是两所不同学校。","stage":"完全"},
+    {"name":"岚县高级中学","province":"山西","city":"吕梁","district":"岚县","level":"普通高中","nature":"公办","grades":"新高三","rates":"公开（人数，数据偏旧）：2013年达线147人、2014年170人、2015年195人（获吕梁市教育局“2014—2015年度高考成绩优秀奖”）、2018年二本B类以上达线195人。未公布本科率百分比；按47个班3100人规模推算，估测本科率约35%-55%（估测）。","classes":"未公开，通常设重点班与平行班；12轨制，47个教学班、3100名学生。","confidence":"公开","note":"1956年建校，公办高级中学，吕梁市《普通高中学校名录》登记于岚县东村镇。括注“岚县实验中学”未能核实为同一所学校，疑为另一所（义务教育阶段）学校，建议核对原图。","stage":"高中"},
+    {"name":"文水二中","province":"山西","city":"吕梁","district":"文水","level":"市示范高中","nature":"公办","grades":"新高二","rates":"公开（人数）：2023年高考二本B类以上达线278人；2025年高考二本B类以上达线突破390人（学校/百科公开）。学校未公布本科率百分比，按每届约600人规模推算，估测本科率约55%-70%（估测）。","classes":"设“崇文班”作为重点/特色班，其余为平行班，按中考成绩分层编班；十二轨制，在校约1800人。","confidence":"公开","note":"官方全称“文水县第二高级中学”，公办普通高中，2013年恢复独立办学，现为吕梁市示范高中。2023年吕梁市普通高中招生计划中列为公办、招生600人。","stage":"完全"},
+    {"name":"刘胡兰中学校","province":"山西","city":"吕梁","district":"文水","level":"普通高中","nature":"公办","grades":"新高三","rates":"未公开；未检索到学校或教育主管部门发布的本科率/一本率数据。估测本科率约40%-60%（估测）。","classes":"未公开，通常设重点班与平行班。","confidence":"估测","note":"官方名称“山西省刘胡兰中学”，吕梁市教育局2023年普通高中招生计划中列为公办、招生600人（含定向20人），招生范围文水县。未见示范高中认定的公开依据，level 归为普通高中。","stage":"完全"},
+    {"name":"汾阳市第五高级中学","province":"山西","city":"吕梁","district":"汾阳","level":"市示范高中","nature":"公办","grades":"新高二","rates":"公开：2018年高考全校790名应届考生中，达二本B类及以上414人（约52.4%）；2024年高考二本总上线率较2023年增长39.1%（净增107人）、一本总上线率较2023年增长43.3%（净增14人）。学校未公布近年本科率绝对值，估测本科率约50%-65%（估测）。","classes":"设“林枫班”“小白杨班”等重点/特色班，按中考成绩分层，其余为平行班；2018年重点班达线率普遍突破80%。","confidence":"公开","note":"官方全称“汾阳市第五高级中学校”，公办，获“吕梁市示范高中”“吕梁名校”（首批）称号；2023年招生计划750人。","stage":"高中"},
+    {"name":"吕梁现代双语中学","province":"山西","city":"吕梁","district":"汾阳","level":"民办高中","nature":"民办","grades":"新高三","rates":"未公开；未检索到本科率/一本率数据。估测本科率约30%-55%（估测）。","classes":"未公开，通常设重点班与平行班；2023年高中招生计划仅150人，规模较小。","confidence":"估测","note":"地区已修正：原清单标注“离石”，但吕梁市教育局《普通高中学校名录》（2025-10）与《2023年普通高中学校招生计划》均载明“吕梁现代双语高级中学”为民办、位于汾阳市文峰街道崇文社区、招生范围汾阳市，故 district 由“离石”修正为“汾阳”。若原图确指离石另有校区或另一所同名学校，请核对原图。","stage":"完全"},
+    {"name":"五台中学","province":"山西","city":"忻州","district":"五台","level":"县重点高中","nature":"公办","grades":"新高二 / 新高三","rates":"公开（人数，数据陈旧）：2006年二本以上达线175人、2007年175人（居忻州市40余所高中第七）、2008年181人、2009年234人。近十余年未见公开升学数据；估测本科率约40%-60%（估测）。","classes":"未公开近年分班方案；历史上自1977年起在全县范围招收重点班，现通常设重点班与平行班。","confidence":"估测","note":"山西省非首批重点中学、县直重点高级中学，1952年建校，公办。括注“五台实验中学”未能核实为同一所学校，疑为另一所学校，建议核对原图。","stage":"高中"},
+    {"name":"惠来县第一中学","province":"广东","city":"揭阳","district":"惠来","level":"省示范高中","nature":"公办","grades":"新高二","rates":"公开：2023年高考本科上线1491人、特殊类型招生控制线（高优线）上线343人（惠来县教育局/当地媒体公开）；本科率官方未换算公布，按当年考生规模估测本科率约60%-75%（估测）","classes":"县内龙头公办高中，中考录取分数线全县最高，优质生源集中；设创新班/实验班与平行班，按中考成绩分层（分班细则未完全公开）","confidence":"公开","note":"官方全称为广东省惠来县第一中学，广东省一级学校、国家级示范性普通高中","stage":"高中"},
+    {"name":"葵潭中学","province":"广东","city":"揭阳","district":"惠来(葵潭镇)","level":"普通高中","nature":"公办","grades":"新高三","rates":"未公开本科率；公开信息仅见其为惠来县西部片区规模较大的公办完全中学、揭阳市一级学校序列；估测本科率约20%-35%（估测）","classes":"完全中学（初中部+高中部），生源以葵潭、隆江等西部乡镇为主，尖子生多被惠来一中录取后剩余生源就读；未公开分班细则，通常设重点班与平行班","confidence":"估测","note":"官方全称为惠来县葵潭中学，位于惠来县葵潭镇；县域普通高中，公开升学数据极少","stage":"完全"},
+    {"name":"东厦中学","province":"广东","city":"汕头","district":"龙湖","level":"省示范高中","nature":"公办","grades":"新高三","rates":"公开：2025年高考本科上线512人、本科率52.14%（学校/当地媒体公开数据）；一本(特控)率未单独公布，估测约8%-15%（估测）","classes":"公办完全中学，广东省一级学校；高中面向汕头市区招生，生源中上；设重点班与平行班，按中考成绩分层（细则未公开）","confidence":"公开","note":"官方全称为汕头市东厦中学，位于龙湖区"},
+    {"name":"江门一中学校","province":"广东","city":"江门","district":"市辖区","level":"省示范高中","nature":"公办","grades":"新高一","rates":"公开：学校官方简介载近五年特控线(高优)上线率分别为63%、64%、63%、70%、71%，本科上线率99%以上；媒体报道2025年特控率突破70%、600分以上200余人（公开，年份见前述）","classes":"市直属公办高级中学，全市顶尖生源主要去向；分班细则未公开，通常按中考成绩设创新/实验班与平行班","confidence":"公开","note":"官方全称为广东省江门市第一中学，广东省首批重点中学、首批广东省一级学校、首批国家级示范性普通高中；校区实际位于江海区，因系市直属学校，保留给定的市辖区口径","stage":"高中"},
+    {"name":"开平市开侨学校","province":"广东","city":"江门","district":"开平","level":"省示范高中","nature":"公办","grades":"新高一","rates":"公开：2020年高考报考1272人、本科以上入围1027人（本科入围率约80.7%），优先投档线318人（南方+/开平市教育部门2020年公开数据）；另有2025年媒体报道该校本科率达85%；近年估测本科率约80%-95%（估测）","classes":"寄宿制公办高中，面向开平市及周边招生，按中考文化成绩择优录取；分班细则未公开，通常设重点班与平行班","confidence":"公开","note":"官方全称为开平市开侨中学，高考成绩长期居江门各市区前列","stage":"完全","tag":"9月1日开学"},
+    {"name":"开平长师学校","province":"广东","city":"江门","district":"开平","level":"省示范高中","nature":"公办","grades":"新高一","rates":"本科率未公开；公开：2020年本科入围335人（其中体艺类286人，美术206人、音乐59人、体育13人），体艺高考成绩连续20年居江门市第一（开平市教育局公开）；按在校2700余人规模估测本科率约35%-50%（估测）","classes":"普通高中48个教学班、2700余名学生；文理科与体艺科多元并重，设美术、音乐、体育特色方向；文化班分层情况未公开，通常设重点班与平行班","confidence":"估测","note":"官方全称为开平市长师中学，前身广东长沙师范学校，2000年由中师改办高中，2005年评为广东省一级学校（此处将广东省一级学校归入省示范高中口径）","stage":"完全"},
+    {"name":"开平二中学校","province":"广东","city":"江门","district":"开平","level":"市示范高中","nature":"公办","grades":"新高一","rates":"未公开近年本科率；公开：1999年评为江门市一级学校，2009年与泮村中学合并为完全高中；估测本科率约30%-45%（估测）","classes":"在校约1693人、36个课室规模的完全高中，生源以水口镇及周边为主；美术高考为传统强项（上线率与录取率曾连续多年居开平市第一）；分班细则未公开，通常设重点班与平行班","confidence":"估测","note":"官方全称为开平市第二中学，位于开平市水口镇","stage":"完全"},
+    {"name":"礼乐学校","province":"广东","city":"江门","district":"江海(礼乐)","level":"省示范高中","nature":"公办","grades":"新高一","rates":"未公开精确本科率；公开：2021—2023年连续三年获江门市高中阶段教育质量先进学校一等奖，本科上线人数和上线率持续攀升（江海区教育局/学校公开表述）；估测本科率约50%-70%（估测）","classes":"公办完全中学，广东省一级学校；特色为小语种教学（日语、俄语、法语、德语、西班牙语5个语种教学班，全校小语种学生超1100人，江门市规模最大）；艺体特色突出；文化班分层未公开，通常设重点班与平行班","confidence":"估测","note":"官方全称为江门市江海区礼乐中学，创办于1956年，位于江海区礼乐街道","stage":"完全"},
+    {"name":"江门市棠下学校","province":"广东","city":"江门","district":"蓬江(棠下镇)","level":"省示范高中","nature":"公办","grades":"新高一","rates":"未公开精确本科率；公开信息：2002年广东省一级学校，2008年评为广东省普通高中教学水平优秀学校并确认为国家级示范性普通高中；估测本科率约80%-90%，一本(特控)率约20%-35%（估测）","classes":"完全中学，高中3个年级63个班约3200人、初中42个班约2000人；高中面向江门市直、蓬江区直、江海区、棠下镇招生，按中考成绩录取；分班细则未公开，通常设重点班与平行班；女足青训为特色项目","confidence":"估测","note":"官方全称为江门市棠下中学（前身新会县立第三初级中学、新会市第三中学），位于蓬江区棠下镇，与给定地区一致","stage":"完全"},
+    {"name":"鹤山市第三学校","province":"广东","city":"江门","district":"鹤山","level":"市示范高中","nature":"公办","grades":"新高一","rates":"未公开本科率；公开：2025年该校考入普通高中人数稳步提升、体艺特长生培养成果突出（江门日报2026年报道，为义务教育口径）；若含高中部，估测本科率约20%-35%（估测）","classes":"鹤山市教育局登记为公办完全中学，现有29个教学班、1368名学生、在编教师88人；打造醒狮、书法、科创、合唱等10余项第二课堂；分班细则未公开，通常设重点班与平行班","confidence":"估测","note":"官方全称为鹤山市第三中学，位于鹤山市宅梧镇（革命老区），江门市一级学校、鹤山市直属中学；近年官方与媒体报道均以义务教育（初中）办学成效为主，高中部规模与是否仍招生建议向学校核实","stage":"完全"},
+    {"name":"东源实验学校","province":"广东","city":"河源","district":"东源","level":"民办高中","nature":"公办","grades":"新高一","rates":"非普通高中，无本科率数据；公开：河源市示范性初中学校；中考层面据第三方招生网站称每年有30余人考入河源中学等省级示范高中（非官方来源，未采信为公开数据）","classes":"公办初级中学，55个教学班、教职员工246人、学生约1900人，半寄宿；按学区招生（仙塘镇片区+符合条件随迁子女），分班细则未公开","confidence":"待核实","note":"官方全称为东源县实验中学，创办于2004年，多方公开资料显示为公办初级中学而非高中；若名单意在高中，需核对原图（东源县高中为东源中学、东江中学等）","stage":"完全"},
+    {"name":"磷溪中学","province":"广东","city":"潮州","district":"潮安(磷溪镇)","level":"普通高中","nature":"公办","grades":"新高二","rates":"未公开；估测本科率约20%-35%（估测）","classes":"公办完全中学（初中+高中），通常设重点班与平行班","confidence":"估测","note":"广东潮州市潮安区磷溪镇公办完全中学；原图“磷溪中学”。公开升学数据极少，level按县域普通高中暂定，建议向潮安区教育局核实。"},
+    {"name":"82中","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高二","rates":"待核实——校名与地区未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。重要线索：重庆市大渡口区人民政府官网发布的《重庆市大渡口区茄子溪中学简介》明确记载该校“原市第82中学”，因此本条与清单第5项“重庆市茄子溪中学”高度疑似为同一所学校，建议优先核对原图确认是否为重复录入。若原图另有所指，全国多地（如郑州、成都、天津等）亦有“第82中学”，需结合上下文地区判断。"},
+    {"name":"仁和学校","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高一","rates":"待核实——校名与地区未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。候选较多，建议优先核对与本清单已有地区重合的两处：（1）云南省保山市施甸县仁和中学——施甸县教育体育局义务教育学校名录在列，初级中学，县级教育部门举办，地址仁和镇仁和社区（与清单第13、14项同属施甸县，可能性较高）；（2）四川省攀枝花市仁和区各校（与清单第4项同属攀枝花）。此外湖南、江苏等地亦有同名学校。"},
+    {"name":"光华实验学校","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高二","rates":"待核实——校名与地区未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。全国同名学校众多且多为民办（如深圳、上海、成都、西安等地均有“光华实验学校”），无法确定指向。建议结合原图上下文地区判断。"},
+    {"name":"兴林学校","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高一","rates":"待核实——校名与地区未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。检索未找到确切匹配。候选方向：吉林省通化市通化县兴林镇（有兴林镇学校/中心校）、辽宁及黑龙江林区带“兴林”字样的场镇学校；亦不排除为“兴隆”“新林”（黑龙江大兴安岭新林区）等的OCR误识。"},
+    {"name":"古城镇林业高中","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高三","rates":"待核实——校名与地区未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。候选线索：黑龙江省牡丹江市林口县下辖古城镇（清单第16-18项均属林口县，地域高度吻合），当地为林区，历史上林业系统曾办有子弟学校/林业高中；检索到“林口县古城镇中心校”，但未找到“古城镇林业高中”的官方记载，可能已撤并或更名。建议向林口县教育体育局核实。"},
+    {"name":"后绥实验中学","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高三","rates":"待核实——校名与地区未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。检索未找到名为“后绥实验中学”的学校，疑为OCR误识。可能的还原方向：“绥棱实验中学”（黑龙江绥化）、“绥中实验中学”（辽宁葫芦岛）、“后所实验学校”、“厚街实验中学”（广东东莞）等。建议回看原图逐字确认。"},
+    {"name":"团中","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高二","rates":"待核实：校名无法唯一定位，暂不给出任何升学数据或估测区间。","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。线索：兵团系统常将“××团第一中学/团场中学”口语简称为“团中”，若与本清单第40项同批来源，可能指兵团某团场中学（如第二师所属团场学校），但无法唯一定位，建议回看原始截图确认完整校名。"},
+    {"name":"官庄一中学校","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高一","rates":"待核实——校名与地区未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。全国以“官庄”命名的乡镇众多（山东临沂/枣庄、河南、湖南沅陵、江苏等地均有官庄镇及“官庄一中”），且乡镇“一中”多为初级中学而非高中。无法确定指向。"},
+    {"name":"恒中中学","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高二","rates":"待核实：校名无法唯一定位，暂不给出任何升学数据或估测区间。","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。多轮检索未能在本批次涉及的省区内定位到名为“恒中中学”的普通高中，疑为OCR误识（如“恒山中学”“衡中”等），建议回看原始截图确认。"},
+    {"name":"汇佳中学","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高三","rates":"待核实——校名与地区未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。候选线索：北京市昌平区私立汇佳学校（知名民办国际化学校，含中学部）；另有部分地区存在同名民办中学。因本清单主体为中西部与东北县域学校，是否指北京汇佳存疑。"},
+    {"name":"洋河德阳中学","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高二","rates":"待核实——校名与地区未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。检索未找到确切匹配。两种可能：（1）为江苏省宿迁市洋河新区辖内学校（该区有洋河实验学校等），“德阳”疑为误识；（2）“洋河”与“德阳”（四川德阳市）分属两条记录，OCR 时串行合并。建议回看原图确认是否应拆分为两所学校。"},
+    {"name":"田家炳（校名地区待核实）","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高二","rates":"待核实：校名无法唯一定位，暂不给出任何升学数据或估测区间。","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。线索：全国由田家炳基金会捐建的“田家炳中学”众多；若与本清单第15项同批来源，包头市第九十八中学原名即“包头市田家炳中学”（2023年更名），本条可能与第15项重复指向同一所学校，建议回看原始截图确认。 【去重合并 2026-08-07】库内有两条完全同名、同年级、均无地区信息的记录，判定为同一条名单项被重复录入，已合并。具体是哪一所田家炳中学仍需核对原图。"},
+    {"name":"铁帽中学","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高三","rates":"待核实：校名无法唯一定位，暂不给出任何升学数据或估测区间。","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。检索未能在本批次涉及省区内定位到名为“铁帽中学”的普通高中，疑为乡镇名OCR误识，建议回看原始截图确认。"},
+    {"name":"高陂中学","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高三","rates":"待核实——校名与地区未确定，无法定向检索升学数据，故不作估测","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。候选线索：最知名者为广东省梅州市大埔县高陂中学（1901年创办，公办完全中学，梅州市一级学校，24个教学班、学生1300余人，地址大埔县高陂镇陂华路）。此外福建永定、江西等地亦有“高陂”地名及同名中学。因本清单主体为川渝云贵与东北地区，该校是否属广东尚不能确定。"},
+    {"name":"龙山镇二中","province":"待核实","city":"待核实","district":"待核实","level":"待核实","nature":"待核实","grades":"新高三","rates":"待核实：校名无法唯一定位，暂不给出任何升学数据或估测区间。","classes":"待核实","confidence":"待核实","note":"校名或地区存疑，需核对原图。线索：全国名为“龙山镇”的乡镇众多，无法唯一定位；若与本清单第33项同源，甘肃天水张家川回族自治县龙山镇设有“张家川县第二高级中学”，本条可能与之重复或指该镇另一所中学，建议回看原始截图确认。"},
+    {"name":"霍城二中","province":"新疆","city":"伊犁","district":"霍城","level":"市示范高中","nature":"公办","grades":"新高三","rates":"未公开；未检索到本科率/一本率数据。可参考录取端公开数据：2022年普通类招生1000人、录取分数线411.1分（同年霍城县江苏中学普通类录取线534分），生源分层明显。估测本科率约35%-55%（估测）。","classes":"未公开常规班型；招生端分普通类与特长类（体育、美术、舞蹈、音乐、播音主持），2026年经伊犁州批准可在州直范围内招收足球专业学生。","confidence":"估测","note":"官方名“霍城县第二中学”，1938年建校，公办全日制高级中学（2025年单位预算公开：编制225人、实有238人），校址在霍城县清水河镇（非县城水定镇）；被伊犁哈萨克自治州教育局认定为州级示范性普通高中，本表按此归为市（州）示范高中。","stage":"完全"},
+    {"name":"惠远中学","province":"新疆","city":"伊犁","district":"霍城(惠远镇)","level":"普通高中","nature":"公办","grades":"新高二","rates":"未见官方公开数据（第三方资讯站称2024届重本率约92%，该数值与县域同类学校水平明显不符且无官方来源，不予采信）。估测本科率约40%-60%（估测）。","classes":"据第三方资料设“特尖班”，其余为平行班；未见官方公开的分班方案。","confidence":"估测","note":"官方登记名“霍城县惠远中学”，公办完全中学，举办单位霍城县教育局，开办资金5149万元。地区提示：霍城县教育局公开的学校名录载明其所属街道为兰干镇、地址为霍城县朝阳南路（西侧）100号，与清单标注的“惠远镇”不一致，district 中的“惠远镇”建议核对原图/官方名录后修正。","stage":"高中"},
+    {"name":"霍城县清水二中","province":"新疆","city":"伊犁","district":"霍城(清水河镇)","level":"普通高中","nature":"公办","grades":"新高一","rates":"未公开精确本科率；霍城县属伊犁州辖县，清水河镇为县域经济重镇，镇级普通高中官方极少公布逐年高考数据，估测本科率约30%-50%（估测）","classes":"霍城县清水河镇公办普通高中，生源以本镇及周边中考中后段为主；未公开分班细则（待补充）","confidence":"估测","note":"新增（2026-08-07，用户报）。位于新疆伊犁州霍城县清水河镇。与库内已有的「霍城二中」（#328，官方名霍城县第二中学、校址同在清水河镇）为不同学校，本次用户明确为独立新增，未合并。等级按镇级普通高中列入「普通高中」层级，本科率给估测区间并标注。红标：9月17日开学。","stage":"高中","tag":"9月17日开学"},
+    {"name":"华山中学","province":"新疆","city":"兵团第二师","district":"库尔勒/铁门关","level":"省示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"公开：2025届高考重本上线率95%、本科上线率100%；近几年高考文理科重本上线率平均约93%、中考上线率97%；2006年高考本科上线率91.81%、总体上线率99%以上（学校公开）。多次夺得巴州文理科状元。","classes":"实行分层次教学（学校自述“分层次发展”教学理念）；未公开具体班型名称。铁门关校区依托本部教研资源，高中部按兵团招生政策含统招、定向计划。","confidence":"公开","note":"官方名“新疆生产建设兵团第二师华山中学”，1960年建校、1983年定名，12年一贯制省级示范性公办学校，占地360余亩、师生近8000人。本部在库尔勒市建国北路108号，另设铁门关校区（铁门关市兴疆街8号）。province/city/district 按清单保留（实际行政隶属为新疆生产建设兵团第二师铁门关市）。"},
+    {"name":"巴楚县第五中学","province":"新疆","city":"喀什","district":"巴楚","level":"普通高中","nature":"公办","grades":"新高二","rates":"未见官方公开的本科率/一本率（第三方资讯站称艺体类考生本科上线率超过80%，无官方来源，仅供参考）。估测本科率约20%-40%（估测）。","classes":"设音乐、美术、舞蹈等特长生班与足球专项课程，形成“文化+特长”双轨培养；另有“新未来自强班”资助品学兼优的家庭困难学生；其余为平行班。","confidence":"估测","note":"2019年9月设立，前身为色力布亚镇完全中学高中部，后独立为寄宿制全日制普通高级中学，实行半军事化管理，教师97人。建校时间短，公开升学数据极少。","stage":"完全"},
+    {"name":"沭阳第三高级中学","province":"江苏","city":"宿迁","district":"沭阳","level":"省示范高中","nature":"公办","grades":"新高三","rates":"未公开精确本科率；公开信息为沭阳县公办重点高中（省级星级高中序列）；估测本科率约60%-80%，一本率约10%-25%（估测）","classes":"沭阳县主要公办高中之一，生源为全县中考中上段（次于沭阳高级中学）；设重点班与平行班，按中考成绩分层（细则未公开）","confidence":"估测","note":"官方全称为江苏省沭阳县第三高级中学；具体星级认定与逐年高考数据未检索到官方公开发布","stage":"高中"},
+    {"name":"宿迁市洋河实验高中","province":"江苏","city":"宿迁","district":"洋河新区","level":"省示范高中","nature":"公办","grades":"新高一 / 新高二","rates":"公开：2024年高考本科达线率98.32%（学校/洋河新区公开发布）；一本率未单独公布，估测约20%-40%（估测）","classes":"洋河新区重点公办高中，面向宿迁市及洋河新区招生；设实验班/重点班与平行班，按中考成绩分层（细则未完全公开）","confidence":"公开","note":"校名亦作宿迁市洋河实验学校高中部/洋河实验高级中学；98.32%为本科达线率（含艺体类达线），非纯文化类本科率","stage":"高中"},
+    {"name":"丰县华山中学（华山高中）","province":"江苏","city":"徐州","district":"丰县","level":"省示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开精确本科率；公开信息为江苏省四星级普通高中；估测本科率约60%-80%，一本率约10%-25%（估测）","classes":"丰县主要公办高中之一，生源覆盖华山镇及全县中考中上段；设重点班与平行班，按中考成绩分层（细则未公开）","confidence":"估测","note":"官方全称为丰县华山中学；江苏四星级高中在本表归入省示范高中口径 【去重合并 2026-08-07】库内原有「丰县华山中学（华山高中）」「华山中学」两条，与本条为同一所，已合并。注意与新疆兵团第二师华山中学是两所不同学校。"},
+    {"name":"丰县宋楼中学（宋楼学校）","province":"江苏","city":"徐州","district":"丰县","level":"市示范高中","nature":"公办","grades":"新高一 / 新高二 / 新高三","rates":"未公开本科率；公开信息为农村江苏省三星级普通高中；估测本科率约30%-50%（估测）","classes":"农村公办完全中学，生源以宋楼镇及周边乡镇为主，属丰县中考录取中后段；未公开分班细则，通常设重点班与平行班","confidence":"估测","note":"名单标注为\"丰县宋楼学校(宋楼中学)\"，官方全称为丰县宋楼中学；江苏三星级高中在本表归入市示范高中口径 【去重合并 2026-08-07】库内原有「宋楼中学」按年级拆分的两条，与本条为同一所，已合并。","stage":"完全","tag":"11号军训"},
+    {"name":"江苏省徐州市丰县毓秀中学","province":"江苏","city":"徐州","district":"丰县","level":"待核实","nature":"公办","grades":"新高二","rates":"检索显示该校为初级中学（丰县毓秀初级中学），非普通高中，无高考本科率数据","classes":"公办初级中学，按丰县城区学区招生；分班细则未公开","confidence":"待核实","note":"校名或地区存疑，需核对原图。公开资料显示丰县\"毓秀\"对应的是毓秀初级中学（初中），若名单意在高中，可能与丰县中学、丰县华山中学等混淆"},
+    {"name":"新沂市海门学校","province":"江苏","city":"徐州","district":"新沂","level":"省示范高中","nature":"公办","grades":"新高一","rates":"未公开精确本科率；公开：按江苏省四星级普通高中标准建设/办学的公办高中；估测本科率约70%-85%，一本率约15%-30%（估测）","classes":"公办高中，新沂市与南通海门教育协作背景，生源为新沂市中考中上段；设实验班/重点班与平行班，按中考成绩分层（细则未公开）","confidence":"估测","note":"校名在公开资料中亦作新沂市海门中学/海门实验学校；江苏四星级高中在本表归入省示范高中口径，星级认定情况建议以江苏省教育厅名录核对","stage":"完全","tag":"15号军训"},
+    {"name":"新沂市第三中学","province":"江苏","city":"徐州","district":"新沂","level":"省示范高中","nature":"公办","grades":"新高一 / 新高三","rates":"未公开精确本科率；公开信息为江苏省四星级普通高中；估测本科率约65%-85%，一本率约12%-25%（估测）","classes":"新沂市城区主要公办高中之一，生源为全市中考中上段（次于新沂一中）；设重点班与平行班，按中考成绩分层（细则未公开）","confidence":"估测","note":"江苏四星级高中在本表归入省示范高中口径；星级与年份建议以江苏省教育厅四星级高中名录核对","stage":"完全"},
+    {"name":"新沂市瓦窑中学","province":"江苏","city":"徐州","district":"新沂","level":"市示范高中","nature":"公办","grades":"新高二","rates":"未公开本科率；公开信息为江苏省三星级普通高中（乡镇公办完全中学）；估测本科率约35%-55%（估测）","classes":"乡镇公办完全中学，生源以瓦窑镇及周边乡镇为主，属新沂市中考录取中后段；未公开分班细则，通常设重点班与平行班","confidence":"估测","note":"江苏三星级高中在本表归入市示范高中口径","stage":"完全"},
+    {"name":"棋盘中学","province":"江苏","city":"徐州","district":"新沂","level":"市示范高中","nature":"公办","grades":"新高三","rates":"未公开本科率；公开信息为江苏省三星级普通高中（乡镇公办完全中学）；估测本科率约35%-55%（估测）","classes":"乡镇公办完全中学，生源以棋盘镇及周边乡镇为主；未公开分班细则，通常设重点班与平行班","confidence":"估测","note":"官方全称为新沂市棋盘中学；江苏三星级高中在本表归入市示范高中口径","stage":"高中"},
+    {"name":"高流中学","province":"江苏","city":"徐州","district":"新沂","level":"市示范高中","nature":"公办","grades":"新高一","rates":"未公开本科率；公开信息为江苏省三星级普通高中（乡镇公办完全中学）；估测本科率约35%-55%（估测）","classes":"乡镇公办完全中学，生源以高流镇及周边乡镇为主，属新沂市中考录取的中后段；未公开分班细则，通常设重点班与平行班","confidence":"估测","note":"官方全称为新沂市高流中学；江苏三星级高中在本表归入市示范高中口径","stage":"完全"},
+    {"name":"新沂西城高级中学","province":"江苏","city":"徐州","district":"新沂","level":"普通高中","nature":"公办","grades":"新高三","rates":"未检索到公开的本科率或星级认定数据；估测本科率约40%-60%（估测）","classes":"新沂市城区普通高中，生源以本市中考中段为主；未公开分班细则，通常设重点班与平行班","confidence":"估测","note":"该校公开资料较少，办学层级（星级）与是否由原校改制/更名建议向新沂市教育局核实","stage":"高中"},
+    {"name":"承德县承实高中","province":"河北","city":"承德","district":"承德县","level":"省示范高中","nature":"民办","grades":"新高二 / 新高三","rates":"公开：2022年高考本科上线率97.2%、强基（一本）上线率51.9%；2024年高考本科上线率95%、强基上线率64.2%（学校官网及公开报道）。","classes":"按成绩分层，设“清北班”等培优班型（见学校教师招聘公告），其余为平行班；全寄宿、半军事化内务管理。","confidence":"公开","note":"办学主体为“承德承实高级中学有限公司”，由承德文博教育科技集团投资兴建，属民办；已被河北省教育厅认定为省级示范性普通高中，并为承德县第一中学教育联合体成员校。在校生5000余人，专任教师389人。","stage":"高中"},
+    {"name":"河北平山中学","province":"河北","city":"石家庄","district":"平山","level":"省示范高中","nature":"公办","grades":"新高三","rates":"公开（数据偏旧）：2014年高考理工/文史类本一上线150人、本二上线494人、本科上线1118人，艺术体育类本一上线23人。近年未公布精确本科率；估测本科率约60%-80%（估测）。","classes":"未公开，通常设重点班与平行班。","confidence":"公开","note":"公办，平山县龙头高中，2008年首次实现该县清北零的突破。省级示范性高中身份依据公开百科资料判断，未见河北省教育厅名单原文，建议以官方名单复核。","stage":"完全"},
+    {"name":"赞皇中学","province":"河北","city":"石家庄","district":"赞皇","level":"省示范高中","nature":"公办","grades":"新高二","rates":"公开：2017年高考575名考生中本一上线92人（含艺术生，增幅69%）、本二上线387人，本二上线率67%。近年未公布精确本科率；估测本科率约65%-80%（估测）。","classes":"未公开具体班型；作为石家庄二中教育集团帮扶校，实行全员聘任制与精细化管理，通常设重点班与平行班。","confidence":"公开","note":"官方名“河北赞皇中学”，1952年建校，公办，赞皇县唯一的省级示范性普通高中；2011年起由石家庄二中对口帮扶，另与石外集团签订帮扶协议。","stage":"高中"},
+    {"name":"魏县第五中学","province":"河北","city":"邯郸","district":"魏县","level":"市示范高中","nature":"公办","grades":"新高三","rates":"未公开精确本科率；公开信息仅为荣誉性表述：2023年获“邯郸市普通高中教育教学质量提升先进单位”，2021年以来多次获邯郸市高中教育质量提升进步奖。估测本科率约35%-55%（估测）。","classes":"未公开，通常设重点班与平行班；51个教学班、在校生3500余人，办学口号为“低进高出，高分优出”。","confidence":"估测","note":"1955年建校（原魏县双井中学），2002年升格县直中学并更名；2007年通过邯郸市示范性高中验收，是邯郸市唯一一所地处农村的市级示范性高中。2023年7月起成为魏县一中分校。校址在双井镇。","stage":"完全"},
+    {"name":"信阳市平桥区第一学校","province":"河南","city":"信阳","district":"平桥","level":"省示范高中","nature":"公办","grades":"新高一","rates":"公开：学校及当地公开表述其高考本科上线率达60%以上（未标注具体年份的持续性表述）；一本率未公开，估测约10%-20%（估测）","classes":"平桥区龙头公办高中，生源为平桥区中考中上段；设实验班/重点班与平行班，按中考成绩分层（细则未完全公开）","confidence":"公开","note":"对应信阳市平桥区第一高级中学（平桥一高），河南省示范性普通高中；60%以上为公开表述的区间性数据，非某一年精确统计值","stage":"完全"},
+    {"name":"杞县第二高级中学","province":"河南","city":"开封","district":"杞县","level":"普通高中","nature":"公办","grades":"新高二","rates":"未公开本科率；公开信息仅确认其为杞县公立普通高中（未检索到省级示范性高中认定）；估测本科率约40%-60%（估测）","classes":"县域公办高中，生源为杞县中考中段（次于杞县高中/杞县一高）；未公开分班细则，通常设重点班与平行班","confidence":"估测","note":"官方全称为杞县第二高级中学；县级普通高中极少公布精确升学数据","stage":"高中"},
+    {"name":"祥符区第四高级中学","province":"河南","city":"开封","district":"祥符","level":"普通高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开本科率；公开信息：曾为河南省示范性普通高中，2016年被摘牌（河南省教育厅公开通报）；估测本科率约35%-55%（估测）","classes":"区属公办高中，生源为祥符区中考中段；未公开分班细则，通常设重点班与平行班","confidence":"估测","note":"名单标注为\"祥符区第四高级中学(祥符高级中学)\"，最终名取主名；因2016年省示范性高中资格被摘牌，本表按普通高中口径归类","stage":"高中"},
+    {"name":"通许一高","province":"河南","city":"开封","district":"通许","level":"省示范高中","nature":"公办","grades":"新高二","rates":"未公开精确本科率；公开信息为河南省示范性普通高中，系通许县龙头公办高中；估测本科率约60%-80%，一本率约10%-25%（估测）","classes":"县内龙头公办高中，中考录取线全县最高；设实验班/重点班与平行班，按中考成绩分层（细则未公开）","confidence":"估测","note":"官方全称为通许县第一高级中学；河南省示范性普通高中在本表归入省示范高中口径","stage":"高中"},
+    {"name":"嵩县一高","province":"河南","city":"洛阳","district":"嵩县","level":"省示范高中","nature":"公办","grades":"新高一 / 新高二 / 新高三","rates":"未公开精确本科率；公开信息为河南省示范性普通高中，系嵩县龙头公办高中；估测本科率约65%-85%，一本率约15%-30%（估测）","classes":"县内龙头公办高中，中考录取线全县最高，优质生源集中；设实验班/重点班与平行班，按中考成绩分层（细则未公开）","confidence":"估测","note":"官方全称为嵩县第一高级中学；河南省示范性普通高中在本表归入省示范高中口径","stage":"高中"},
+    {"name":"庆元中学","province":"浙江","city":"丽水","district":"庆元","level":"省示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开精确本科率；公开信息为浙江省一级特色示范高中（省级重点/示范序列），系庆元县唯一龙头公办高中；估测本科率约75%-90%，一段(重点)率约15%-30%（估测）","classes":"县内唯一龙头公办高中，全县优质生源主要去向；设实验班/重点班与平行班，按中考成绩分层（细则未公开）","confidence":"估测","note":"官方全称为浙江省庆元中学；浙江省一级（特色）示范高中在本表归入省示范高中口径","stage":"高中"},
+    {"name":"黄冈天有高中","province":"湖北","city":"黄冈","district":"黄州","level":"民办高中","nature":"民办","grades":"新高二","rates":"公开：2023年高考文化类过本科线171人，另有艺术类过本科线207人（学校公开发布）；本科率未公布分母，无法换算，按民办补录生源结构估测本科率约30%-50%（估测）","classes":"民办高中，面向黄冈市及周边招生，生源以中考中后段与艺术特长生为主；艺术（美术、传媒等）方向为主要升学通道；分班多按文化/艺术方向及成绩分层（细则未公开）","confidence":"公开","note":"官方全称为黄冈天有高级中学，由天有教育集团举办；本科上线人数为公开数据，本科率为估测","stage":"高中"},
+    {"name":"新邵一中","province":"湖南","city":"邵阳","district":"新邵","level":"省示范高中","nature":"公办","grades":"新高三","rates":"未公开精确本科率；公开信息为湖南省示范性普通高中，系新邵县龙头公办高中；估测本科率约70%-88%，一本率约20%-35%（估测）","classes":"县内龙头公办高中，中考录取线全县最高，优质生源集中；设实验班/重点班与平行班，按中考成绩分层（细则未公开）","confidence":"估测","note":"官方全称为湖南省新邵县第一中学；湖南省示范性普通高中在本表归入省示范高中口径","stage":"高中"},
+    {"name":"嘉峪关市第二中学","province":"甘肃","city":"嘉峪关","district":"市辖区","level":"普通高中","nature":"公办","grades":"新高二 / 新高三","rates":"公开（口径为整体“升学率”，含专科，非本科率）：学校整体高考升学率常年保持在96%以上；先后向清华、北大输送6名学子（学校官网及招生简章公开）。本科率未公开；估测本科率约60%-80%（估测）。","classes":"实行分类分层教学，将音乐、美术、舞蹈、健美操、体育等特长生编入艺体特长班，形成“合格+特长”“文化课程+艺术课程三年不间断融合式”培养模式；其余为平行班。","confidence":"公开","note":"1970年建校，原嘉峪关铁路子弟中学，公办，是嘉峪关市唯一的完全中学。获“甘肃省普通高中特色实验学校”“教育部国防教育示范学校”等称号；未见省示范性普通高中认定的公开依据，level 就低归为普通高中。清单括注“第二高级中学”与官方名“嘉峪关市第二中学”不完全一致，建议核对。","stage":"完全"},
+    {"name":"张家川县第一中学","province":"甘肃","city":"天水","district":"张家川","level":"县重点高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开；未检索到本科率/一本率数据。估测本科率约50%-70%（估测）。","classes":"未公开，通常设重点班与平行班；截至2020年高中共36个教学班。","confidence":"估测","note":"1946年创建（前身私立新民中学），2001年初中部剥离成为独立高中，2009年迁入新校区并更名“张家川回族自治县第一高级中学”。公开资料表述为“市属重点中学”，本表按选项就近归为县重点高中。","stage":"高中"},
+    {"name":"张家川县第二高级中学","province":"甘肃","city":"天水","district":"张家川","level":"普通高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开精确数值；公开信息仅为定性表述“高考艺术类专业上线率稳步提升”。估测本科率约30%-50%（估测）。","classes":"“文化课+特长课”双轨育人，设体育、艺术（美术、音乐）特长班，配专业训练场馆；其余为平行班。","confidence":"估测","note":"1958年建校（前身张家川县第二中学），2002年升格为独立高中，张家川县教育局主管，公办；校址在张家川回族自治县龙山镇，为天水市二十四所重点监控高中之一。","stage":"高中"},
+    {"name":"平凉一中","province":"甘肃","city":"平凉","district":"崆峒","level":"省示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"未见学校官网公开的精确本科率/一本率（第三方资讯站称近年一本上线率稳定在60%以上、二本上线率超95%，无官方来源，仅供参考）。估测本科率约90%-97%、估测一本率约55%-70%（估测）。","classes":"未公开，通常设重点班与平行班。","confidence":"估测","note":"官方全称“甘肃省平凉市第一中学”，1905年建校，公办，平凉市龙头高中，校址崆峒区建丰路88号。“甘肃省示范性高中”表述来自第三方资讯站，未见省教育厅名单原文，建议复核。","stage":"高中"},
+    {"name":"平凉二中","province":"甘肃","city":"平凉","district":"崆峒","level":"普通高中","nature":"公办","grades":"新高二","rates":"未公开；未检索到本科率/一本率数据。估测本科率约50%-70%（估测）。","classes":"未公开，通常设重点班与平行班；兼顾文化课教学与艺体特长培养。","confidence":"估测","note":"官方全称“平凉市第二中学”，1956年建校，崆峒区属公办高中，校址崆峒区崆峒东路191号。未见示范高中认定的公开依据，level 就低归为普通高中。","stage":"完全"},
+    {"name":"庄浪一中","province":"甘肃","city":"平凉","district":"庄浪","level":"省示范高中","nature":"公办","grades":"新高三","rates":"未公开精确本科率/一本率；公开信息为累计成果：恢复高考以来先后有31名学子被清华、北大录取，数千名学子被985/211等双一流院校录取，曾培养全省理科状元陈振睿及市文理科状元（庄浪县政府官网公开）。估测本科率约85%-95%、估测一本率约50%-70%（估测）。","classes":"未公开具体班型，通常设重点班与平行班；50个教学班、2500多名学生。","confidence":"估测","note":"官方全称“庄浪县第一中学”，1942年5月创建，公办；2003年改建为高级中学并获评平凉市首批示范性高中，2006年被命名为“甘肃省示范性普通高中”（庄浪县政府官网公开）。","stage":"高中"},
+    {"name":"庆阳第一中学（庆阳一中）","province":"甘肃","city":"庆阳","district":"市直","level":"省示范高中","nature":"公办","grades":"新高一 / 新高二 / 新高三","rates":"公开：2021年高考一本上线率73.12%、二本以上上线率97.66%；2015年高考应届一本上线率60.17%、二本上线率85.52%，一本上线600人、二本上线956人（含往届）；2024年有2名学生进入甘肃省前100名（公开）。","classes":"未公开具体班型名称；建有学科奥赛培优体系与190余门校本课程，通常设重点班与平行班。","confidence":"公开","note":"校名存疑但可定位：检索未发现庆阳市存在名为“庆阳第一学校”的办学主体，最可能指“甘肃省庆阳第一中学”（庆阳市第一中学，简称庆阳一中），本条数据即按该校填写；建议核对原图后将 name 规范为“甘肃省庆阳第一中学”。该校1940年创办，1978年为甘肃省首批24所重点中学之一，2000年首批“甘肃省示范性普通高中”，2021年12月列入甘肃省卓越高中培育计划，2011年迁入陇东学院原校区（西峰区南大街32号，对应清单“市辖区”即西峰区）。 【去重合并 2026-08-07】原名「庆阳第一学校」为名单笔误，官方名为甘肃省庆阳第一中学；库内另有「庆阳第一中学（庆阳一中）」「庆阳一中」两条，已合并。","stage":"高中"},
+    {"name":"陇东学院附属学校","province":"甘肃","city":"庆阳","district":"市辖区","level":"市示范高中","nature":"公办","grades":"新高一","rates":"公开（口径为“进线率”，含各批次、非纯本科率）：2015年高考288人参考、进线270人、进线率93.7%；2016年273人参考、进线252人、92.3%；2017年231人参考、进线228人、98.7%（学校招生简章公开）。近年本科率未公开；估测本科率约60%-80%（估测）。","classes":"未公开，通常设重点班与平行班；36个教学班、1700余名学生。2020年9月起与庆阳一中建立“优质学校+”协作办学机制。","confidence":"公开","note":"官方名称为“陇东学院附属中学”（清单写作“附属学校”，建议核对）。1986年由庆阳师专与庆阳地区行署共建，1988年经省教育厅批准成立，2006年10月整体移交庆阳市人民政府、由市教育局主管，性质由高校附属转为市直完全中学（公办）；2014年被确定为“庆阳市示范性普通高中”。校址西峰区（对应清单“市辖区”）。","stage":"完全"},
+    {"name":"碌曲县藏族中学","province":"甘肃","city":"甘南","district":"碌曲","level":"普通高中","nature":"公办","grades":"新高三","rates":"未公开；未检索到本科率/一本率数据。估测本科率约25%-45%（估测）。","classes":"未公开，通常设重点班与平行班；配双语（藏汉）师资，面向碌曲县及周边藏族聚居区招生，含初中、高中两个学段。","confidence":"估测","note":"公办寄宿制完全中学，甘南藏族自治州碌曲县玛艾镇，属民族教育核心校；毕业生多流向西北民族大学、中央民族大学等民族院校。","stage":"完全"},
+    {"name":"泉州第九中学","province":"福建","city":"泉州","district":"丰泽","level":"省示范高中","nature":"公办","grades":"新高三","rates":"未公开近年精确本科率；公开：2007年10月通过福建省二级达标高中验收，2016年4月通过省一级达标高中校验收并经省教育厅确认（泉州网等公开报道）；学校自述\"生源起点较低但高考本科上线率逐年大幅递增\"；估测本科率约55%-75%（估测）","classes":"公办完全中学，创办于1992年，现有60个左右班级、在校生3000多人，教职工约260人；初中按丰泽街道、泉秀街道学区招生，高中面向市区招生；开设体育、音乐、美术特长生培养方向；分班细则未公开，通常设重点班与平行班","confidence":"估测","note":"官方全称为福建省泉州第九中学（泉州九中），位于丰泽区津淮街中段；福建省一级达标高中在本表归入省示范高中口径","stage":"完全"},
+    {"name":"石狮华侨中学","province":"福建","city":"泉州","district":"石狮","level":"普通高中","nature":"公办","grades":"新高三","rates":"未公开精确本科率；公开：2023年11月通过\"省三级达标高中\"泉州市级评估，2024年获批福建省三级达标高中（石狮市政府/百科公开）；估测本科率约30%-50%（估测）","classes":"公办完全中学，占地128亩、师生近4000人；历史上曾设科学教育实验班（小班授课、骨干教师任教）；现行分班细则未公开，通常设重点班与平行班","confidence":"估测","note":"创办于1954年，2006年曾与石光中学合并为石光华侨联合中学，2014年恢复独立办学并沿用石狮市华侨中学校名","stage":"完全"},
+    {"name":"石狮市后垵学校","province":"福建","city":"泉州","district":"石狮","level":"普通高中","nature":"待核实","grades":"新高二","rates":"联网检索未找到该校公开信息，无法给出本科率或升学数据","classes":"未公开","confidence":"待核实","note":"校名或地区存疑，需核对原图。多轮检索未找到\"石狮市后垵学校\"的官方或权威公开页面；\"后垵\"为石狮市村居地名，疑为镇村片区义务教育学校，也不排除与石狮八中、石狮市第五实验小学等混淆","stage":"完全"},
+    {"name":"福建省龙岩市第四中学","province":"福建","city":"龙岩","district":"新罗","level":"市示范高中","nature":"公办","grades":"新高二","rates":"未公开精确本科率；公开信息为福建省二级达标高中（省级达标校序列中的第二档）；估测本科率约40%-60%（估测）","classes":"公办完全中学，生源以新罗城区及周边为主，位于龙岩一中、龙岩二中之后的录取梯队；分班细则未公开，通常设重点班与平行班","confidence":"估测","note":"省二级达标高中在本表归入市示范高中口径；未检索到该校官方发布的逐年本科率数据"},
+    {"name":"关岭布依族苗族自治县民族高级中学","province":"贵州","city":"安顺","district":"关岭","level":"省示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开精确本科率。层级有官方依据：关岭自治县人民政府官网《关岭自治县民族高级中学简介》载明“2014年8月学校由贵州省教育厅授牌为省级二类示范性普通高中”（公开，2022年发布）；学校官网亦自述“属贵州省二类示范性普通高中”，正创建省级一类示范性普通高中。可查办学成果：2019、2020年获安顺市普通高中教学质量突出贡献奖和教育质量提升二等奖（公开）。年度本科率/一本率未见公布。估测本科率约60%-80%（估测）","classes":"公开：设强基计划自主招生班，2025年招收40人，报名门槛为贵州省省模总分（不含文综）420分以上且数理化不低于210分（学校官网2025年自主招生方案，公开）；其余年级按中考成绩录取分层，通常设重点班与平行班","confidence":"估测","note":"全称“关岭自治县民族高级中学”（关岭民中）。创办年份两说：学校官网/县政府简介称1942年，百科类称1933年（原关岭县立初级中学），需以县志为准。2004年更名为现名，2013年合并关岭一中高中部，2014年10月起与贵阳市第一中学“2+4”合作办学并挂牌“贵阳市第一中学合作学校”，2022年起为国家乡村振兴重点帮扶县教育人才“组团式”帮扶学校。占地420余亩，教职工303人。地区与给定一致。","stage":"高中"},
+    {"name":"普兰店二中","province":"辽宁","city":"大连","district":"普兰店","level":"省示范高中","nature":"公办","grades":"新高二","rates":"未公开近年精确本科率。层级有官方依据：1980年被辽宁省确定为第二批省重点中学（公开）；大连市教育局《2025年中考政策》明确其为省级示范性普通高中，并新增面向市内考区招生50人（公开，2025年）。可查历史数据（均为历史年份，不代表当前水平）：2001年高考6人升入清北，蒋俏蕾646分居大连市文科第一、辽宁省第三，重点大学升学率达60%；2002年5人升入清北；2003年6人升入清北；2005年4人被清北录取。恢复高考以来累计输送大专以上2万人、清北100余人（公开）。估测本科率约75%-90%（估测）","classes":"未公开近年班型，通常设重点班与平行班。公开规模：49个教学班、在校生3000余人、教职工203人，占地150亩","confidence":"估测","note":"全称“大连市普兰店区第二中学”，1952年建校，公办高级中学，地址普兰店区丰荣街道庙山村。地区与给定一致。","stage":"完全"},
+    {"name":"普兰店区高级中学","province":"辽宁","city":"大连","district":"普兰店","level":"省示范高中","nature":"公办","grades":"新高二","rates":"未公开精确本科率。层级有官方依据：2008年12月正式批准为辽宁省示范性高级中学（公开）；大连市教育局《2025年中考政策》将“大连市普兰店区高级中学”列入面向市内考生招生的省级示范性普通高中序列，其面向市内考生普通类招生计划的72%用于指标到校生录取（公开，2025年）。年度本科率/一本率未见官方公布。估测本科率约70%-90%（估测）","classes":"公开：学校明确“重视特长、特色教学，因材施教，实施分层次教学，突显办学特色”，即按成绩分层编班。公开规模：38个教学班、2476名学生、专任教师132人（其中高级教师46名、研究生学历13人）","confidence":"估测","note":"全称“大连市普兰店区高级中学”，2004年创办，公办，由大连市政府与原普兰店市政府共同投资兴建，用于发展北三市农村基础教育。校训“爱国、荣校、尚德、博学”。地区与给定一致。","stage":"高中"},
+    {"name":"西大附中","province":"重庆","city":"重庆","district":"北碚","level":"省示范高中","nature":"公办","grades":"新高二","rates":"有公开数据（注意口径）。中国教育报（jyb.cn）刊载的西南大学附属中学校（集团）办学成果材料称：“近五年高考重点大学（一本）录取率98%以上，位居重庆最前列；清华、北大录取人数实现5倍增长”（公开，学校/集团宣传口径）。历史明细（学校公开材料）：某年文理参考共1152人，一本上线1030人，其中理科一本上线率91.2%、文科82.9%；统招生理科裸分一本率98.2%、文科裸分一本率88.3%。第三方汇总称2024年清北7人、600分以上600+、重本率约90%（非官方）。提示：98%为“统招生裸分”等特定口径，与全体考生口径（约90%）不同，引用时须注明口径。","classes":"公开：设拔尖创新班、至诚班（2+6一贯制）、慕课联盟班等；面向重庆全市联招招生，中考须达重庆联招线以上，部分区县设定向招生计划，特长生需通过专业能力测试，按成绩与选拔结果分层","confidence":"公开","note":"全称“西南大学附属中学校”，公办，重庆市北碚区杜家街43号，原重庆市教委直属重点中学（民间所称“七龙珠”之一），本部+科学城、金州、大竹林等分校。地区与给定一致（北碚区）。"},
+    {"name":"大渡口区37中","province":"重庆","city":"重庆","district":"大渡口","level":"市示范高中","nature":"公办","grades":"新高三","rates":"未公开精确本科率。层级有官方依据：重庆市大渡口区教委《重庆市第三十七中学校2024年单位预算情况说明》明确“是重庆市首批市级重点中学”（公开，2024年）；1980年为大渡口区属重点中学，1995年评为四川省重庆市重点中学，2001年评为重庆市（直辖市）重点中学。年度本科率/重本率未见官方公布（第三方招生平台所称“重本率60%以上、本科率超95%”无官方来源，不予采信）。估测本科率约80%-95%（估测）","classes":"未公开具体班型，通常设重点班与平行班。公开：每年针对初高中起始年级开设近40门选修课，其中9门入选重庆市精品选修课；建有“三向七维”自得课程体系","confidence":"估测","note":"全称“重庆市第三十七中学校”，1955年建校，公办完全中学，大渡口区政府公益二类事业单位、财政全额拨款，设A、B及自成三个校区，占地110余亩，在职教职工345人、学生5000余人。2000年重钢第二子弟学校并入，2005年重庆市钢城中学高中部并入。地区与给定一致。"},
+    {"name":"重庆市茄子溪中学","province":"重庆","city":"重庆","district":"大渡口","level":"普通高中","nature":"公办","grades":"新高二","rates":"有公开数据。大渡口区人民政府官网《重庆市大渡口区茄子溪中学简介》（2021年12月发布，公开）：重本上线人数由2016年39人逐年增至88、123、157、175人，当年222人，重本率46.6%。人民网重庆频道/重庆日报2023年2月报道（公开）：学校高考重本率从0%增至50.2%，本科率从10%增至90.15%，重本增幅200%；美术生全市联考本科上线人数从2016年44人增至2022年215人。以上为学校/政府公布口径。","classes":"公开：开设美术特长班、成都七中直播班；以体艺（美术、体育）特色为主线分班，形成1个市级体育创新实践基地+6个市级精品课程+20个社团格局。学校为艺体特色高中，按特长与成绩分层","confidence":"公开","note":"重要：大渡口区政府官方简介明确该校“原市第82中学”，与本清单第11项“82中”高度疑似为同一所学校，建议核对原图确认是否重复录入。学校始建于1957年，普通高完中，42个教学班、2200余名学生；2023年秋季起成为大渡口区第二所重庆市联招高中。地区与给定一致。","stage":"完全"},
+    {"name":"巫山县第二中学","province":"重庆","city":"重庆","district":"巫山","level":"普通高中","nature":"公办","grades":"新高三","rates":"未公开。未检索到官方或权威来源公布的本科率/一本率数据（第三方招生平台所称“本科上线率稳定在60%以上、艺体类本科上线率超85%”无官方出处，不予采信）。估测本科率约50%-70%（估测）","classes":"未公开，通常设重点班与平行班。第三方信息提及打造艺体特色课程，未获官方确认","confidence":"估测","note":"全称“重庆市巫山县第二中学校”，公办寄宿制高中，位于巫山县高唐街道。未查到该校获评市级/区县级重点或示范高中的官方认定文件，level 按“普通高中”暂定，如需精确请向巫山县教委核实。地区与给定一致。","stage":"完全"},
+    {"name":"巫溪中学（巫溪县中学校）","province":"重庆","city":"重庆","district":"巫溪","level":"市示范高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开精确本科率。层级有依据：2005年经重庆市人民政府评定为重庆市级重点中学（公开）；1979年为原地区16所重点学校之一。第三方招生资讯平台称“近年高考本科上线率稳定在70%以上”，无官方出处，不予采信为公开数据。估测本科率约60%-80%（估测）","classes":"未公开具体班型，通常设重点班与平行班。公开：现有142个教学班、学生9000余人、在职教职工490人，2008年秋起分新老两个校区，总占地近300亩","confidence":"估测","note":"全称“巫溪县中学校”（又称巫溪中学），1940年建校（前身四川省巫溪县立初级中学），公办完全中学，主管部门巫溪县教育委员会。地区与给定一致。 【去重合并 2026-08-07】库内原有「巫溪县中学校」一条，为本校官方全称，已合并。","stage":"完全"},
+    {"name":"重庆市铜梁区铜梁一中","province":"重庆","city":"重庆","district":"铜梁","level":"省示范高中","nature":"公办","grades":"新高二","rates":"未公开精确本科率；公开信息为重庆市重点中学（2005年评为重庆市重点中学）；估测本科率约75%-90%（估测）","classes":"通常设重点班与平行班；按中考成绩分层","confidence":"估测","note":"全称重庆市铜梁第一中学，1930年创办，2005年评为重庆市重点中学；与铜梁实验中学校为两所不同学校，原图“重庆市铜梁区铜梁一中”即指本校。"},
+    {"name":"铜梁实验中学校","province":"重庆","city":"重庆","district":"铜梁","level":"普通高中","nature":"公办","grades":"新高二","rates":"未公开；估测本科率约50%-70%（估测）","classes":"未公开，通常设重点班与平行班","confidence":"估测","note":"公办完全中学，重庆市铜梁区南城街道龙腾大道168号，2016年8月建成投用；与“铜梁一中”（重庆市铜梁区铜梁一中，中兴路291号，2005年评为重庆市重点中学）是两所不同学校，原图“铜梁实验中学校”即指本校。","stage":"完全"},
+    {"name":"子长市中学","province":"陕西","city":"延安","district":"子长","level":"县重点高中","nature":"公办","grades":"新高二 / 新高三","rates":"公开：2022年高考文化课一本上线88人、上线率11.52%，二本以上516人、上线率67.54%，加艺术类81人共本科上线597人；2023年高考文化课一本上线108人、上线率11.92%，文化课二本以上687人、上线率75.83%，加艺体43人共本科上线730人、本科上线率80.57%（学校2023年招生简章公开）。","classes":"分层教学、动态管理：设双师班1-2个（与西安高新一中同步授课的“双师+”云课程班，每班40人）、创新班2个（延安优秀教师团队与本校教师联合施教）、实验班4个，其余为平行班；另有“延中代培生”推荐机制（按成绩推荐20名到延安中学代培）。","confidence":"公开","note":"1945年由陕甘宁边区政府批准创办，公办，现为陕西省标准化高中；2021年迁入新校区，2023年3月起由延安中学托管合作办学。82个教学班、在校4363人。","stage":"完全"},
+    {"name":"榆林第十二中学","province":"陕西","city":"榆林","district":"市辖区","level":"普通高中","nature":"公办","grades":"新高二 / 新高三","rates":"公开：2023年高考475人参加，文化课一本上线163人（约34.3%）。本科率未公开；估测本科率约60%-80%（估测）。","classes":"未公开重点班设置；推行导学案教学与“五步”教学法，开设日语班，另设学困生帮扶项目，实行“封闭管理、开放教学”。","confidence":"公开","note":"官方全称“榆林市第十二中学”，2006年始建、2008年招生、2016年开设高中部，2019年创建成陕西省省级标准化高中（省级标准化高中不等同于省示范高中，本表按现有认定就低归入普通高中）。公办完全中学，隶属榆阳区教体局，校址榆阳区麻地湾环城北路北侧（对应清单“市辖区”即榆阳区）。2020年起加入榆林市第一中学分校教育联合体。","stage":"完全"},
+    {"name":"靖边县一中","province":"陕西","city":"榆林","district":"靖边","level":"县重点高中","nature":"公办","grades":"新高二 / 新高三","rates":"未见官方公开的本科率/一本率（第三方资讯站称近年一本上线率约32%、二本上线率超85%，无官方来源，仅供参考）。估测本科率约70%-85%（估测）。","classes":"未公开，通常设重点班与平行班。","confidence":"估测","note":"重要提示：括注“靖边七中”经检索为另一所独立学校——榆林市靖边县第七中学（2003年批准、2004年招生，原“民办公助”完全中学，2008年转为公助体制，校址靖边县张家畔街道寨山村），与靖边县第一中学并非同一所学校，二者不可合并，需核对原图确认实际指向。另：靖边一中“省级示范高中”的表述来自第三方资讯站，未见陕西省教育厅名单原文，本表就低归为县重点高中，建议复核。","stage":"高中"},
+    {"name":"林口县第四中学","province":"黑龙江","city":"牡丹江","district":"林口","level":"县重点高中","nature":"公办","grades":"新高二 / 新高三","rates":"未公开近年精确本科率。可查公开数据均为绝对人数或单项成绩，非比率，不可直接换算：2001年高考重点本科149人、专科以上641人；2002年重点本科155人、专科以上690人，获全市文科状元；2014年普本达线750余人，部分学生被哈工大、南京航空航天大学、中国人民大学录取；2023年摘牡丹江市理科状元（朱明宇677分），另有669分（数学满分）居六市县第二，600分以上25人居六市县第一（公开）。估测本科率约60%-80%（估测）","classes":"未公开，通常设重点班与平行班。公开规模：52-60个教学班、学生3500-5000人，教职工151人（高级教师29名、一级教师74名）","confidence":"估测","note":"全称“林口县第四中学”（林口四中），1978年建校，公办全日制高级中学，地址林口县西部四通路南段。办学特色“人文见长，文理互补”，为黑龙江省东部建校较晚但发展较快的重点高中之一，获全国中小学国防教育示范学校、省级文明单位等。在林口县内为主力普通高中。地区与给定一致。","stage":"完全"},
+    {"name":"林口一中学校","province":"黑龙江","city":"牡丹江","district":"林口","level":"省示范高中","nature":"公办","grades":"新高一","rates":"未公开且办学类型存疑。网络二手资料称该校2024年高考理科最高分607分、文科561分、“本科第一批次录取率约75%”，但来源为内容农场型站点、无官方出处，且与该校办学类型的矛盾信息并存，不予采信。因办学类型未定，暂不给出针对性估测；若确为普通高中，估测本科率约50%-75%（估测）","classes":"未公开，通常设重点班与平行班","confidence":"待核实","note":"校名指向存疑，需核对原图/向林口县教育体育局核实。矛盾点：一方面，林口县职业技术教育中心2024年招生简章将校址标注为“林口县职业教育中心学校（原林口县第一中学）”，暗示一中已转为/并入职教中心；另一方面，有资料称2004年一中与职教中心合并为综合中学、此后两校恢复独立办学，一中仍为公办普通高级中学（地址林口镇一中路北段）。二者不能相互印证，故 level 记为“待核实”。地区与给定一致。","stage":"高中"},
+    {"name":"刁翎镇学校","province":"黑龙江","city":"牡丹江","district":"林口(刁翎镇)","level":"初中","nature":"公办","grades":"新高一","rates":"不适用：该校为义务教育阶段学校，无高中部，不产生本科率/一本率，故不作估测。","classes":"公开：中心校下设林口县刁翎镇中学、林口县刁翎镇中心小学、林口县刁翎镇幼儿教育中心三个内设机构（林口县政府2024年单位预算公开）。分班方式未公开，通常按成绩编班","confidence":"公开","note":"官方全称“林口县刁翎镇中心校”，隶属林口县教育体育局，二级预算单位、公益一类事业单位，职责为实施义务教育并开展学前、小学、初中及成人教育（林口县人民政府《2024年/2026年单位预算公开》，公开）。关键提示：无高中部，高中层级分类与本科率指标均不适用，故 level 记为“待核实”。另刁翎镇内还有“刁翎骏升中学/骏升学校”，若原图指该校需另行核实。地区与给定一致。","stage":"初中"},
+    {"name":"海门学校","province":"江苏","city":"南通","district":"海门","level":"省示范高中","nature":"公办","grades":"新高一","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=省示范高中。"},
+    {"name":"洋河实验学校","province":"江苏","city":"宿迁","district":"洋河","level":"民办高中","nature":"民办","grades":"新高一","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=民办高中。","tag":"18号军训"},
+    {"name":"起步区太平学校","province":"山东","city":"济南","district":"起步","level":"初中","nature":"公办","grades":"新高一","stage":"初中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=初中，等级=初中。 【去重合并 2026-08-07】库内原有一条「起步区太平学校（地区待核实）」，经核对为同一所，已合并。"},
+    {"name":"兴林中学","province":"广东","city":"梅州","district":"五华","level":"待核实","nature":"公办","grades":"新高一","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"待核实","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=待核实。"},
+    {"name":"东华高级中学（东莞）","province":"广东","city":"东莞","district":"市直","level":"民办高中","nature":"民办","grades":"新高一 / 新高二","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=民办高中。 【去重合并 2026-08-07】原按新高一/新高二拆为两条，已合并；改名加「（东莞）」以区别江苏新沂东华。"},
+    {"name":"官庄一中","province":"河南","city":"南阳","district":"宛城","level":"普通高中","nature":"公办","grades":"新高一","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=普通高中。"},
+    {"name":"余新仁和学校","province":"浙江","city":"嘉兴","district":"南湖","level":"初中","nature":"公办","grades":"新高一","stage":"初中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=初中，等级=初中。"},
+    {"name":"太原市恒中中学校","province":"山西","city":"太原","district":"小店","level":"民办高中","nature":"民办","grades":"新高二","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=民办高中。"},
+    {"name":"龙岩市第四中学","province":"福建","city":"龙岩","district":"市直","level":"市示范高中","nature":"公办","grades":"新高二","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=市示范高中。"},
+    {"name":"回丹","province":"","city":"","district":"","level":"待核实","nature":"公办","grades":"新高二","stage":"待定","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"待核实","note":"来源：0813期年级名单（用户整理）。学段=待定，等级=待核实。"},
+    {"name":"乌鲁木齐市第八十二中学","province":"新疆","city":"乌鲁木齐","district":"天山","level":"初中","nature":"公办","grades":"新高二","stage":"初中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=初中，等级=初中。"},
+    {"name":"丹棱中学西大附中","province":"四川","city":"眉山","district":"丹棱","level":"待核实","nature":"公办","grades":"新高二","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"待核实","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=待核实。"},
+    {"name":"甘肃省兰州第一中学","province":"甘肃","city":"兰州","district":"市直","level":"省示范高中","nature":"公办","grades":"新高二","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=省示范高中。"},
+    {"name":"宇华高中（宇华实验高中）","province":"河南","city":"郑州","district":"市直","level":"省示范高中","nature":"公办","grades":"新高二 / 新高三","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=省示范高中。 【去重合并 2026-08-07】库内原有「宇华高中（地区待核实）」「宇华实验高中」两条，经核对为同一所（宇华教育集团郑州校区），已合并。"},
+    {"name":"铜梁一中","province":"重庆","city":"","district":"铜梁","level":"市示范高中","nature":"公办","grades":"新高二","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=市示范高中。"},
+    {"name":"潮州市湘桥区磷溪中学","province":"广东","city":"潮州","district":"湘桥","level":"普通高中","nature":"公办","grades":"新高二","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=普通高中。"},
+    {"name":"厦门市集美区后溪中学","province":"福建","city":"厦门","district":"集美","level":"初中","nature":"公办","grades":"新高二 / 新高三","stage":"初中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=初中，等级=初中。 【去重合并 2026-08-07】库内原有「后溪中学（地区待核实）」及按年级拆分的两条，经核对均为福建厦门集美区后溪中学，已合并。"},
+    {"name":"成都市温江区光华实验中学校","province":"四川","city":"成都","district":"温江","level":"初中","nature":"公办","grades":"新高二","stage":"初中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=初中，等级=初中。"},
+    {"name":"四川省德阳中学（洋河德阳中学/文昌巷校区）","province":"四川","city":"德阳","district":"市直","level":"省示范高中","nature":"公办","grades":"新高二","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=省示范高中。"},
+    {"name":"丰县毓秀中学","province":"江苏","city":"徐州","district":"丰","level":"初中","nature":"公办","grades":"新高二","stage":"初中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=初中，等级=初中。"},
+    {"name":"承实中学","province":"河北","city":"承德","district":"承德","level":"省示范高中","nature":"公办","grades":"新高三","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=省示范高中。"},
+    {"name":"岚县实验中学","province":"山西","city":"吕梁","district":"岚","level":"普通高中","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=普通高中。"},
+    {"name":"阳高县第四中学校（阳高四中）","province":"山西","city":"大同","district":"阳高县","level":"普通高中","nature":"公办","grades":"新高二","rates":"未公开精确本科率；阳高县属大同市辖县，县级普通高中官方极少公布逐年高考数据，估测本科率约30%-50%（估测）","classes":"阳高县公办普通高中，生源以本县中考中后段为主；未公开分班细则，通常设重点班与平行班（细则未公开）","confidence":"估测","note":"新增（2026-08-07，用户报）。官方全称「阳高县第四中学校」，又称阳高四中；位于山西省大同市阳高县。等级按县级普通高中列入「普通高中」层级，本科率给估测区间并标注。","stage":"高中","tag":""},
+    {"name":"重庆三十七中（大渡口区37中）","province":"重庆","city":"","district":"大渡口","level":"市示范高中","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=市示范高中。"},
+    {"name":"包头市第99中学","province":"内蒙古","city":"包头","district":"市直","level":"普通高中","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=普通高中。"},
+    {"name":"潮州市湘桥区铁铺中学","province":"广东","city":"潮州","district":"湘桥","level":"普通高中","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=普通高中。"},
+    {"name":"莒县龙山镇第二中学","province":"山东","city":"日照","district":"莒","level":"初中","nature":"公办","grades":"新高三","stage":"初中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=初中，等级=初中。"},
+    {"name":"威信二中","province":"云南","city":"昭通","district":"威信","level":"市示范高中","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=市示范高中。"},
+    {"name":"延安子长市中学","province":"陕西","city":"延安","district":"子长","level":"省标准化高中","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=省标准化高中。"},
+    {"name":"新沂市东华高级中学","province":"江苏","city":"徐州","district":"新沂","level":"市示范高中","nature":"公办","grades":"新高一 / 新高二 / 新高三","stage":"高中","rates":"江苏省三星级高中（2021年6月创建）；已列入《徐州市\"十四五\"教育发展规划》2021—2025年全市优质高中创建计划，定位2023年创建省四星级普通高中。近年高考本科上线率稳步攀升，每年有数十名学生考入985/211等双一流高校；艺体类专业考生本科上线率超90%（区间性描述，未见官方精确数字，属估测）。","classes":"公办全日制寄宿制高中，现有约60个教学班、在校生3500余人，专任教师约253人（正高级/特级教师1人，研究生学历20余人，中小学高级教师40余人）。生源来自新沂市中考择优录取，同时向全市初中投放指标生计划、可降分录取。","confidence":"公开","note":"来源：学校官网 dhgjzx.xyjyy.net、百度百科、公开招聘平台单位简介（2026-08-07 核验）。官方全称「新沂市东华高级中学」；前身为新沂市王楼中学（1960年创建），2019年6月新沂市调整高中布局后整体迁入原第三中学校址并更名。等级按江苏省三星级高中归入\"市示范高中\"层级。本科率为区间性描述，标注估测。 【去重合并 2026-08-07】库内原有「东华高级中学(新沂)」「新沂市东华高级学校」两条异名同校记录，经核对为同一所，已合并。"},
+    {"name":"嘉峪关市第二高级中学","province":"甘肃","city":"嘉峪关","district":"市直","level":"普通高中","nature":"公办","grades":"新高三","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=普通高中。"},
+    {"name":"大埔县高陂中学","province":"广东","city":"梅州","district":"大埔","level":"市示范高中","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=市示范高中。"},
+    {"name":"榆林十二中","province":"陕西","city":"榆林","district":"市直","level":"省标准化高中","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=省标准化高中。"},
+    {"name":"后垵实验中学","province":"福建","city":"泉州","district":"石狮","level":"待核实","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"待核实","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=待核实。"},
+    {"name":"五台实验中学","province":"山西","city":"忻州","district":"五台","level":"普通高中","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=普通高中。"},
+    {"name":"武胜超前外国语中学","province":"四川","city":"广安","district":"武胜","level":"民办高中","nature":"民办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=民办高中。"},
+    {"name":"关岭县民族高级中学","province":"贵州","city":"安顺","district":"关岭","level":"省示范高中","nature":"公办","grades":"新高三","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=省示范高中。"},
+    {"name":"务川仡佬族苗族自治县汇佳中学","province":"贵州","city":"遵义","district":"务川","level":"民办高中","nature":"民办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=民办高中。"},
+    {"name":"林口县兴林高级中学（古城镇林业高中）","province":"黑龙江","city":"牡丹江","district":"林口","level":"普通高中","nature":"公办","grades":"新高三","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=普通高中。"},
+    {"name":"烈山区职业教育中心","province":"安徽","city":"淮北","district":"烈山","level":"职业中学","nature":"公办","grades":"新高三","stage":"职业","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=职业，等级=职业中学。"},
+    {"name":"汕头市东厦中学","province":"广东","city":"汕头","district":"金平","level":"省示范高中","nature":"公办","grades":"新高三","stage":"完全","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=完全，等级=省示范高中。"},
+    {"name":"靖边七中","province":"陕西","city":"榆林","district":"靖边","level":"省标准化高中","nature":"公办","grades":"新高三","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=省标准化高中。"},
+    {"name":"祥符高级中学","province":"河南","city":"开封","district":"祥符","level":"省示范高中","nature":"公办","grades":"新高三","stage":"高中","rates":"（待补充：来自0813期年级名单，本科率/一本率未单独核实）","classes":"（待补充）","confidence":"公开","note":"来源：0813期年级名单（用户整理）。学段=高中，等级=省示范高中。"},
+    {"name":"甘谷县第三中学","province":"甘肃","city":"天水","district":"甘谷县","level":"市示范高中","nature":"公办","grades":"新高二","rates":"公开（2022年二本以上上线率52.2%，一本上线96人；2023年二本上线440人、一本119人）；近年本科率估测约50%-65%（估测）。","classes":"与成都七中合作开设远程直播课教学班（直播班），设“文雅班”等特色班级；美术、体育、音乐特长生培养突出；分层教学，设重点班与平行班；“低进优出”育人定位。","confidence":"估测","note":"1957年创建，农村完全中学，位于甘谷县安远镇（亦有资料写大像山镇南街，校址表述不一，建议核对）。天水市示范性普通高中，公办。未查到省级示范性高中认定依据，按市级示范归类。来源：校长访谈、2023招生简章、搜狗百科。","stage":"完全"},
+    {"name":"五台县第二中学","province":"山西","city":"忻州","district":"五台县","level":"初中","nature":"公办","grades":"初中","rates":"初中（义务教育段），无高考本科率；五台县直属公立初级中学，现有42个教学班、2586名学生、187名专任教师（高级教师26人）。","classes":"初级中学，未设高中部；按义务教育常规分班（无重点班公开信息）。","confidence":"公开","note":"1985年建校，五台县直属公立初级中学，位于台城镇古城村；获评义务教育示范学校、山西省依法治校示范校等。本校为初中，无高考本科率，不纳入高考升学对比。来源：百度百科/五台县政府门户网站。","stage":"初中"},
+    {"name":"陕西师范大学平凉实验中学","province":"甘肃","city":"平凉","district":"崆峒区","level":"市示范高中","nature":"公办","rates":"2020 年高考本科上线率 71.5%（422 人参考，本科 301 人），一本上线率 15.64%；近年一本、二本上线率持续两位数增长，2022 年 60 余名学生被复旦、北师大等 985/211 录取（估测：近年本科率约 65%–75%）","classes":"全员导师制、分层教学；设「珍珠班」「实验班」；与陕西师大附中深度合作共享教研；高中部准军事化寄宿管理","note":"平凉市属公办完全中学，2017 年由平凉市政府与陕西师范大学联合创办，平凉市示范性高中；2020 官方本科率 71.5%，近三年增长但无精确公开，按层级估测，存疑以官方为准","confidence":"估测","grades":"新高二","stage":"完全","tag":""},
+    {"name":"沙雅县第二中学","province":"新疆","city":"阿克苏","district":"沙雅","level":"普通高中","nature":"公办","grades":"新高二","stage":"完全","rates":"本科上线率连续五年增长（沙雅县政府网/百科公开数据）：2021年69.68% → 2023年77.33% → 2024年83% → 2025年84.27%；为沙雅县本科率最高学校。估测近年本科率约80%-85%（公开趋势）。","classes":"沙雅县唯一汉语言完全中学、县教育领头羊；寄宿制、含初中+高中；与浙江援疆团队合作，师资含援疆教师；设重点班/平行班（分层细则未公开）。","confidence":"公开","note":"1974年建校，正科级公办完全中学（新疆阿克苏地区沙雅县）。本科上线率公开数据连续增长（2021年69.68%→2025年84.27%）。来源：沙雅县政府门户网站、搜狗百科、57cha。","tag":""},
+    {"name":"恩平市恩城中学","province":"广东","city":"江门","district":"恩平","level":"市示范高中","nature":"公办","grades":"新高一","stage":"高中","rates":"未公开精确本科率。公开：恩平市内综合排名第二（次于恩平市第一中学，略高于恩平市华侨中学）；2024 年最低录取分 533 分、市统筹投档线 558 分（中考总分 800，得分率约 66.6%）；历年高考成绩居同类学校榜首，获江门市 2014 年高中阶段教育质量先进学校二等奖，多名学生考入华南农业大学、广东工业大学等省内重点院校，艺体类升学成绩突出。估测本科率约 55%-70%（估测）","classes":"公办寄宿制高中，隶属恩城街道办事处（市、镇共管）。1970 年创建；2000 年江门市一级学校，2006 年 12 月晋升广东省一级学校，2011 年 5 月评为广东省普通高中教学水平优秀学校。2021 年 9 月平东校区揭牌启用，形成两校区办学。高中教学班约 39 个、在校生约 1885 人（2014 年数据，全校 2818 人），教职工 171 人（高级 43 人、中级 90 人）。生源约 80% 来自周边乡镇，走读生比例较高；推行分层教学、按水平设差异化进度班级；美术教育为学校品牌（恩平市美术基地），书香校园工程为另一特色","confidence":"估测","note":"来源：360 百科 / newton 词条（校史与办学规模）、入学网校情页（学段/寄宿/录取口径）、57cha 排名分析页（2025 参考，含 2024 录取分与市内排名）、恩平一中校史（佐证原校址沿革）。等级判定：该校为「广东省一级学校 + 广东省普通高中教学水平优秀学校」，属省级评定但非国家级示范性普通高中，按库内口径（参照江苏省三星级处理方式）归入「市示范高中」，具体等级见本栏。学段：百科旧述为「完全中学」，近年公开信息学段为高中、以高中办学为主，故标高中。本科率官方未公开精确数字，区间为估测","tag":"9月3日开学"},
+    {"name":"利川市第二中学","province":"湖北","city":"恩施","district":"利川","level":"市示范高中","nature":"公办","grades":"新高一","stage":"高中","rates":"近年官方未公开精确本科率。公开（较早年份）：2005 年高考本科上线 419 人、本科上线率 46.85%，多科居全州一般高中第一；2006 年本科上线 431 人，二批本科上线率居全州一般高中榜首；2007 年本科上线 429 人，化学/政治/生物均分居全州所有高中前三；2009 年本科上线 400 余人。学校招生宣传口径：高考上线率约 95%、本科上线率约 40%。多次获恩施州教育局「高考质量优胜单位」。估测近年本科率约 40%-55%（估测）","classes":"公办寄宿制农村普通高中，位于利川市汪营镇学苑路 38 号（距利川城区约 20 余公里）。1956 年建校（前身为 1938 年创办的湖北省高等商业专科学校），1978 年更名利川县第二高级中学，1986 年定名利川市第二中学。校园占地约 11.36 万㎡、建筑面积约 4 万㎡，设 40 个教学班、在校生 3000 余人（2023 年公开 3319 人），在编教师 196 人（州市级骨干与高级教师 30 余人、中级 84 人）。年度招生计划约 1150 人；生源为利川市及周边初中毕业生，按恩施州中考统一划线录取，本地户籍优先。艺体特色办学，报考本县市高中可享高考专项计划（一般降 15 分以上）","confidence":"估测","note":"来源：利川市政府网《利川市学校信息公开》（2023-11-07，含在编教师/在校生/校长）、百度百科词条、阳光高考中学版校情页（含 2005-2009 高考数据）、入学网校情页、本地媒体招生计划报道。等级判定：2009 年评为「恩施州农村示范高中」（州级示范，恩施州为地级行政区），按库内口径归入「市示范高中」；另为湖北省农村课改样本示范校 / 高中新课改样板学校。升学数据多为 2005-2009 年及招生宣传口径，近年精确数字未公开，已标估测区间"}
+  ]
+}
+};
+
+const ISSUE_KEYS = Object.keys(ISSUES);
+const LV_COLOR = {"省示范高中":"var(--lv1)","市示范高中":"var(--lv2)","县重点高中":"var(--lv3)",
+  "普通高中":"var(--lv4)","民办高中":"var(--lv5)","职业中学":"var(--lv6)","待核实":"var(--lv7)"};
+
+let state = { issue: ISSUE_KEYS[0], view: "search", grade: "g1", kw: "", prov: "" };
+
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function dataOf(issue){ return (ISSUES[issue] && ISSUES[issue].data) || []; }
+function GRADE_OF(g){ return g==='g1'?'新高一':g==='g2'?'新高二':'新高三'; }
+
+function itemsFor(issue, grade){
+  const res=[]; const data=dataOf(issue);
+  for(let i=0;i<data.length;i++){ if(data[i].grades && data[i].grades.indexOf(grade)>=0) res.push({i,r:data[i]}); }
+  return res;
+}
+
+/* ---------- 期次按钮 ---------- */
+function renderIssueBtns(){
+  const box=document.getElementById('issueBtns'); box.innerHTML='';
+  ISSUE_KEYS.forEach(k=>{
+    const b=document.createElement('button');
+    b.className='issue-btn'+(k===state.issue?' active':'');
+    b.textContent=ISSUES[k].name; b.dataset.issue=k;
+    b.onclick=()=>{ state.issue=k; state.kw=''; state.prov=''; renderAll(); };
+    box.appendChild(b);
+  });
+  const meta=document.getElementById('issueMeta');
+  const cur=ISSUES[state.issue];
+  meta.innerHTML='当前：<b>'+esc(cur.name)+'</b> · 归档 '+esc(cur.date)+' · 共 <b>'+cur.data.length+'</b> 所';
+}
+
+/* ---------- 检索树 ---------- */
+function countProv(o){let n=0;for(const c in o)n+=countCity(o[c]);return n;}
+function countCity(o){let n=0;for(const d in o)n+=o[d].length;return n;}
+
+function renderGrade(container, grade){
+  const items=itemsFor(state.issue, grade);
+  const provMap={}; const unknown=[];
+  for(const {i,r} of items){
+    if(!r.province || r.province==='待核实'){ unknown.push({i,r}); continue; }
+    provMap[r.province]=provMap[r.province]||{};
+    provMap[r.province][r.city]=provMap[r.province][r.city]||{};
+    provMap[r.province][r.city][r.district]=provMap[r.province][r.city][r.district]||[];
+    provMap[r.province][r.city][r.district].push({i,r});
+  }
+  const provs=Object.keys(provMap);
+  let bar='<div class="prov-bar" id="bar-'+container.id+'"><button class="prov-btn'+(state.prov===''?' active':'')+'" data-prov="">全部</button>';
+  for(const p of provs) bar+='<button class="prov-btn'+(state.prov===p?' active':'')+'" data-prov="'+esc(p)+'">'+esc(p)+'</button>';
+  bar+='</div>';
+
+  let html='<div class="tree">';
+  provs.sort((a,b)=>countProv(provMap[b])-countProv(provMap[a]));
+  for(const prov of provs){
+    const cities=provMap[prov]; const pCount=countProv(cities);
+    html+='<div class="province" data-prov="'+esc(prov)+'"><div class="province-head" onclick="this.classList.toggle(\'collapsed\')"><span class="arrow">▼</span>'+esc(prov)+'<span class="pcount">'+pCount+' 所</span></div><div class="province-body">';
+    const cityKeys=Object.keys(cities).sort((a,b)=>countCity(cities[b])-countCity(cities[a]));
+    for(const city of cityKeys){
+      const counties=cities[city]; const cCount=countCity(counties);
+      html+='<div class="city"><div class="city-head" onclick="this.classList.toggle(\'collapsed\')"><span class="arrow">▼</span>'+esc(city)+'<span class="ccount">'+cCount+'</span></div><div class="city-body">';
+      for(const county in counties){
+        const list=counties[county];
+        html+='<div class="county"><div class="county-row"><span class="county-name">'+esc(county)+'</span><span class="school-list">';
+        for(const {i,r} of list){
+          const lv=r.level||''; const col=LV_COLOR[lv]||'var(--lv4)';
+          html+='<span class="school-tag" onclick="openModal('+i+')">'+esc(r.name)+(lv?'<span class="lv" style="background:'+col+'">'+esc(lv)+'</span>':'')+(r.stage&&r.stage!=='待定'?' <span style="font-size:10px;color:#0ea5e9;margin-left:2px;font-weight:600">'+esc(r.stage)+'</span>':'')+(r.tag?'<span class="rtag">'+esc(r.tag)+'</span>':'')+'</span>';
+        }
+        html+='</span></div></div>';
+      }
+      html+='</div></div>';
+    }
+    html+='</div></div>';
+  }
+  html+='</div>';
+
+  if(unknown.length){
+    html+='<div class="unknown-section"><div class="unknown-head" onclick="this.classList.toggle(\'collapsed\')"><span class="arrow">▼</span>未明确归类（'+unknown.length+' 所，需核对原图）</div><div class="unknown-body">';
+    for(const {i,r} of unknown) html+='<span class="school-tag" onclick="openModal('+i+')">'+esc(r.name)+'</span>';
+    html+='</div></div>';
+  }
+  container.innerHTML=bar+html;
+
+  container.querySelectorAll('.prov-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      container.querySelectorAll('.prov-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active'); state.prov=btn.dataset.prov; applyFilter(container);
+    };
+  });
+}
+
+function applyFilter(container){
+  const kw=state.kw||''; const pf=state.prov||'';
+  container.querySelectorAll('.province').forEach(provEl=>{
+    const provName=provEl.dataset.prov; const provMatch=!pf||provName===pf; let anyVisible=false;
+    provEl.querySelectorAll('.county').forEach(countyEl=>{
+      let cv=false;
+      countyEl.querySelectorAll('.school-tag').forEach(tag=>{
+        const mk=!kw||tag.textContent.toLowerCase().indexOf(kw.toLowerCase())>=0;
+        tag.style.display=mk?'':'none'; if(mk){cv=true;anyVisible=true;}
+      });
+      countyEl.style.display=cv?'':'none';
+    });
+    provEl.querySelectorAll('.city').forEach(cityEl=>{
+      let vis=false; cityEl.querySelectorAll('.county').forEach(c=>{if(c.style.display!=='none')vis=true;});
+      cityEl.style.display=vis?'':'none';
+    });
+    if(kw) provEl.querySelectorAll('.province-head,.city-head').forEach(h=>h.classList.remove('collapsed'));
+    provEl.style.display=(provMatch&&(anyVisible||!kw))?'':'none';
+  });
+  const unk=container.querySelector('.unknown-section');
+  if(unk){ let anyU=false;
+    unk.querySelectorAll('.school-tag').forEach(tag=>{
+      const mk=!kw||tag.textContent.toLowerCase().indexOf(kw.toLowerCase())>=0;
+      tag.style.display=mk?'':'none'; if(mk)anyU=true;
+    }); unk.style.display=anyU?'':'none';
+  }
+}
+
+function openModal(idx){
+  const r=dataOf(state.issue)[idx]; if(!r)return;
+  const conf=r.confidence||'待核实';
+  const confColor=conf==='公开'?'var(--green)':conf==='估测'?'var(--yellow)':'var(--red)';
+  const lv=r.level||'—'; const lvCol=LV_COLOR[lv]||'var(--lv4)';
+  let html='';
+  html+='<span class="badge" style="background:'+confColor+'">'+esc(conf)+'</span>';
+  html+='<span class="badge" style="background:'+lvCol+'">'+esc(lv)+'</span>';
+  if(r.stage&&r.stage!=='待定') html+='<span class="badge" style="background:#0ea5e9">'+esc(r.stage)+'</span>';
+  html+='<span class="badge" style="background:#64748b">'+esc(r.nature||'—')+'</span>';
+  if(r.tag) html+='<span class="badge" style="background:#e11d48">'+esc(r.tag)+'</span>';
+  const rows=[['省份',r.province||'—'],['城市',r.city||'—'],['区县',r.district||'—'],
+    ['学段',r.stage||'—'],['来源年级',r.grades||'—'],['升学概况',r.rates||'—'],['分班与生源',r.classes||'—']];
+  for(const [k,v] of rows) html+='<div class="row"><span class="k">'+k+'</span><span class="v">'+esc(v)+'</span></div>';
+  if(r.note) html+='<div class="row"><span class="k">备注</span><span class="v" style="color:#b45309">'+esc(r.note)+'</span></div>';
+  document.getElementById('m-name').textContent=r.name||'';
+  document.getElementById('m-body').innerHTML=html;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+
+/* ---------- 仪表盘 ---------- */
+function renderDash(){
+  const data=dataOf(state.issue);
+  const sub=document.getElementById('dashSub');
+  const cnt={}; let total=0;
+  for(const r of data){ const p=r.province||'待核实'; cnt[p]=(cnt[p]||0)+1; total++; }
+  const known=Object.keys(cnt).filter(p=>p!=='待核实').sort((a,b)=>cnt[b]-cnt[a]);
+  const max=Math.max(1,...known.map(p=>cnt[p]));
+  let html='';
+  if(known.length){
+    for(const p of known){
+      const w=Math.round(cnt[p]/max*100);
+      html+='<div class="bar-row"><div class="bar-name">'+esc(p)+'</div><div class="bar-track"><div class="bar-fill" style="width:'+w+'%"><span class="bar-val">'+cnt[p]+'</span></div></div></div>';
+    }
+  }
+  if(cnt['待核实']){
+    const w=Math.round(cnt['待核实']/max*100);
+    html+='<div class="bar-row unknown"><div class="bar-name">待核实</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.max(w,12)+'%"><span class="bar-val">'+cnt['待核实']+'</span></div></div></div>';
+  }
+  document.getElementById('dashBars').innerHTML=html;
+  sub.innerHTML='<b>'+esc(ISSUES[state.issue].name)+'</b> 共 '+total+' 所 · 覆盖 '+known.length+' 个省/自治区/直辖市'+(cnt['待核实']?(' + '+cnt['待核实']+' 所待核实'):'');
+
+  // 对比矩阵
+  const allProvs=new Set();
+  ISSUE_KEYS.forEach(k=>{ for(const r of dataOf(k)) allProvs.add(r.province||'待核实'); });
+  const provs=Array.from(allProvs).filter(p=>p!=='待核实').sort((a,b)=>{
+    const ca=ISSUE_KEYS.reduce((s,k)=>s+dataOf(k).filter(r=>r.province===a).length,0);
+    const cb=ISSUE_KEYS.reduce((s,k)=>s+dataOf(k).filter(r=>r.province===b).length,0);
+    return cb-ca;
+  });
+  if(cnt['待核实']) provs.push('待核实');
+  let t='<thead><tr><th>省份 \\ 期次</th>';
+  ISSUE_KEYS.forEach(k=>{ t+='<th>'+esc(ISSUES[k].name)+'</th>'; });
+  t+='<th>合计</th></tr></thead><tbody>';
+  provs.forEach(p=>{
+    t+='<tr><td>'+esc(p)+'</td>';
+    let rowSum=0;
+    ISSUE_KEYS.forEach(k=>{ const n=dataOf(k).filter(r=>r.province===p).length; rowSum+=n; t+='<td class="cell" data-n="'+n+'">'+(n||'·')+'</td>'; });
+    t+='<td><b>'+rowSum+'</b></td></tr>';
+  });
+  t+='</tbody>';
+  const tbl=document.getElementById('cmpTable'); tbl.innerHTML=t;
+  // 热力着色（按整表最大值归一化）
+  let gmax=1; tbl.querySelectorAll('td.cell').forEach(td=>{ const n=parseInt(td.dataset.n)||0; if(n>gmax)gmax=n; });
+  tbl.querySelectorAll('td.cell').forEach(td=>{
+    const n=parseInt(td.dataset.n)||0; if(n>0){ const a=0.12+0.55*(n/gmax); td.style.background='rgba(14,165,233,'+a.toFixed(2)+')'; td.style.color='#0f172a'; td.style.fontWeight='600'; }
+  });
+}
+
+/* ---------- 总渲染 ---------- */
+function renderSearch(){
+  ['g1','g2','g3'].forEach(g=>{ renderGrade(document.getElementById(g), GRADE_OF(g)); });
+  // 应用当前过滤
+  const c=document.getElementById(state.grade); applyFilter(c);
+  const c1=itemsFor(state.issue,'新高一').length,c2=itemsFor(state.issue,'新高二').length,c3=itemsFor(state.issue,'新高三').length;
+  document.getElementById('dataNote').innerHTML=
+    '<b>数据说明：</b>本系统为「'+esc(ISSUES[state.issue].name)+'」归档数据，共 <b>'+dataOf(state.issue).length+'</b> 所，含学校等级、办学性质、本科率/一本率、分班与生源、数据可信度。'
+    +'年级分布：新高一 '+c1+' 所 · 新高二 '+c2+' 所 · 新高三 '+c3+' 所。'
+    +'县级中学官方极少公布精确本科率，未公开者按学校层级给<strong>估测区间</strong>并标注"估测"，绝不捏造；校名或地区存疑者标"待核实"。招生咨询请以学校官方发布为准。';
+}
+function renderAll(){
+  renderIssueBtns();
+  renderSearch();
+  renderDash();
+  // 视图切换
+  document.getElementById('view-search').classList.toggle('hidden', state.view!=='search');
+  document.getElementById('view-dash').classList.toggle('hidden', state.view!=='dash');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===state.view));
+}
+
+/* 事件 */
+document.getElementById('searchBox').addEventListener('input',e=>{ state.kw=e.target.value; applyFilter(document.getElementById(state.grade)); });
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active'); state.grade=btn.dataset.tab;
+    document.getElementById(state.grade).classList.add('active');
+    applyFilter(document.getElementById(state.grade));
+  };
+});
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.onclick=()=>{ state.view=btn.dataset.view; renderAll(); window.scrollTo({top:0,behavior:'smooth'}); };
+});
+
+renderAll();
+
+/* 部署通道状态实时提示（GitHub Pages 负载时段） */
+function updateClock(){
+  const now=new Date();
+  const p=n=>String(n).padStart(2,'0');
+  document.getElementById('utcTime').textContent=p(now.getUTCHours())+':'+p(now.getUTCMinutes())+':'+p(now.getUTCSeconds());
+  const bj=new Date(now.getTime()+8*3600*1000);
+  document.getElementById('bjTime').textContent=p(bj.getUTCHours())+':'+p(bj.getUTCMinutes())+':'+p(bj.getUTCSeconds());
+  const day=now.getUTCDay(); // 0=Sun..6=Sat
+  const isWeekday=(day>=1&&day<=5);
+  const h=now.getUTCHours();
+  let cls,text,hint;
+  if(isWeekday && h>=8 && h<18){
+    if(h>=12 && h<14){cls='red';text='通道延迟';hint='UTC 12:00–14:00 亚欧美负载重叠最重，部署易排队十几分钟，请耐心等待或错峰重试';}
+    else {cls='yellow';text='通道拥堵';hint='工作日 UTC 08:00–18:00 高负载窗口，构建可能排队数分钟';}
+  } else {
+    cls='green';text='通道顺畅';hint='当前非高负载时段，部署通常 1–3 分钟生效';
+  }
+  const tag=document.getElementById('chStatus');
+  tag.className='tag '+cls; tag.textContent=text;
+  document.getElementById('chHint').textContent=hint;
+}
+updateClock();
+setInterval(updateClock,1000);
+</script>
+</body>
+</html>

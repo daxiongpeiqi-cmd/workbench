@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>付庆睿 · 学业诊断规划报告</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --ink: #1a1a1a;
+    --ink-light: #4a4a4a;
+    --warm-bg: #faf8f5;
+    --paper: #ffffff;
+    --accent: #2c7a7b;
+    --accent-light: #e8f4f4;
+    --accent-deep: #1a5c5c;
+    --gold: #b8860b;
+    --gold-light: #fff8e7;
+    --rose: #c44d4d;
+    --rose-light: #fef0f0;
+    --sage: #6b8e6b;
+    --sage-light: #f0f6f0;
+    --lavender: #7b6bae;
+    --lavender-light: #f4f2fa;
+    --border: #e8e3dc;
+    --shadow: 0 2px 16px rgba(0,0,0,0.06);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Serif SC', 'FangSong', '仿宋', 'STFangsong', serif;
+    background: var(--warm-bg);
+    color: var(--ink);
+    line-height: 1.85;
+    -webkit-font-smoothing: antialiased;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  /* ===== MOBILE WRAPPER / CAPTURE AREA ===== */
+  #capture-area {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--warm-bg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ===== TOP BAR ===== */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.92);
+  }
+  .topbar .logo {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+  .topbar .save-btn {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    padding: 7px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  .topbar .save-btn:active { transform: scale(0.96); opacity: 0.85; }
+
+  /* ===== HERO ===== */
+  .hero {
+    padding: 36px 20px 28px;
+    text-align: center;
+    position: relative;
+    background: linear-gradient(180deg, #e8f4f4 0%, var(--warm-bg) 100%);
+  }
+  .hero .tag {
+    display: inline-block;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--accent);
+    background: rgba(44,122,123,0.1);
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.3;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .hero h1 .name {
+    color: var(--accent);
+  }
+  .hero .subtitle {
+    font-size: 14px;
+    color: var(--ink-light);
+    font-weight: 400;
+    letter-spacing: 0.5px;
+  }
+  .hero .decorative-line {
+    width: 48px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    border-radius: 2px;
+    margin: 18px auto 0;
+  }
+
+  /* ===== PROFILE CARD ===== */
+  .profile-card {
+    margin: 0 16px 20px;
+    background: var(--paper);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .profile-card .student-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #3d9e9f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #fff;
+    margin: 0 auto 16px;
+  }
+  .profile-card h2 {
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .profile-card .profile-desc {
+    font-size: 13px;
+    color: var(--ink-light);
+    text-align: center;
+    margin-bottom: 18px;
+    letter-spacing: 0.5px;
+  }
+  .profile-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .profile-tag {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+  }
+  .profile-tag.good { background: var(--sage-light); color: var(--sage); }
+  .profile-tag.warn { background: var(--gold-light); color: var(--gold); }
+  .profile-tag.info { background: var(--accent-light); color: var(--accent); }
+  .profile-tag.highlight { background: var(--lavender-light); color: var(--lavender); }
+
+  /* ===== STATS ROW ===== */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin: 0 16px 20px;
+  }
+  .stat-item {
+    background: var(--paper);
+    border-radius: var(--radius-sm);
+    padding: 16px 12px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .stat-item .stat-num {
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-item .stat-num.good { color: var(--sage); }
+  .stat-item .stat-num.warn { color: var(--rose); }
+  .stat-item .stat-num.info { color: var(--accent); }
+  .stat-item .stat-label {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 11px;
+    color: var(--ink-light);
+    letter-spacing: 0.3px;
+  }
+
+  /* ===== SECTION ===== */
+  .section {
+    margin: 0 16px 20px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .section-header .section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .section-header .section-icon.blue { background: var(--accent-light); }
+  .section-header .section-icon.gold { background: var(--gold-light); }
+  .section-header .section-icon.rose { background: var(--rose-light); }
+  .section-header .section-icon.green { background: var(--sage-light); }
+  .section-header .section-icon.lavender { background: var(--lavender-light); }
+  .section-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .card {
+    background: var(--paper);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+
+  /* ===== EMPATHY BLOCK ===== */
+  .empathy-block {
+    background: linear-gradient(135deg, #fef9f0, #fdf2e1);
+    border: 1px solid #f0dba0;
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .empathy-block .empathy-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .empathy-block p {
+    font-size: 14px;
+    color: #6b5b3a;
+    line-height: 1.9;
+  }
+
+  /* ===== SCORE BAR ===== */
+  .score-bar-wrap { margin-bottom: 14px; }
+  .score-bar-wrap:last-child { margin-bottom: 0; }
+  .score-bar-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 5px;
+  }
+  .score-bar-label .subject {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .score-bar-label .score {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .score-bar-label .score.good { color: var(--sage); }
+  .score-bar-label .score.mid { color: var(--gold); }
+  .score-bar-label .score.low { color: var(--rose); }
+  .score-bar-track {
+    height: 8px;
+    background: #f0ece6;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s ease;
+  }
+  .score-bar-fill.good { background: var(--sage); }
+  .score-bar-fill.mid { background: var(--gold); }
+  .score-bar-fill.low { background: var(--rose); }
+  .score-bar-fill.info { background: var(--accent); }
+
+  /* ===== SUBJECT ANALYSIS ===== */
+  .subject-card {
+    background: var(--paper);
+    border-radius: var(--radius-sm);
+    padding: 18px 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .subject-card .subj-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .subject-card .subj-emoji {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .subject-card .subj-emoji.math-bg { background: #e8f0fe; }
+  .subject-card .subj-emoji.eng-bg { background: #fce4ec; }
+  .subject-card .subj-emoji.chn-bg { background: #fff3e0; }
+  .subject-card .subj-emoji.phy-bg { background: #e8eaf6; }
+  .subject-card .subj-emoji.che-bg { background: #e0f2f1; }
+  .subject-card .subj-emoji.bio-bg { background: #e8f5e9; }
+  .subject-card .subj-name {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .subject-card .subj-score {
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .subject-card .subj-focus {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+  .subject-card .focus-low { background: #fef0f0; color: var(--rose); }
+  .subject-card .focus-mid { background: #fff8e7; color: var(--gold); }
+  .subject-card .focus-high { background: #f0f6f0; color: var(--sage); }
+  .subject-card .subj-detail {
+    font-size: 13px;
+    color: var(--ink-light);
+    line-height: 1.8;
+  }
+  .subject-card .subj-detail .bold { font-weight: 600; color: var(--ink); }
+  .subject-card .subj-action {
+    font-family: 'Noto Sans SC', sans-serif;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f8f7f4;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--accent-deep);
+    border-left: 3px solid var(--accent);
+    letter-spacing: 0.3px;
+  }
+
+  /* ===== TARGET CARD ===== */
+  .target-university {
+    background: linear-gradient(135deg, #1a3a3a, #2c7a7b);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .target-university::after {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .target-university .target-label {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
+  .target-university .target-schools {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.8;
+    margin-bottom: 12px;
+  }
+  .target-university .target-detail {
+    font-size: 13px;
+    opacity: 0.85;
+    line-height: 1.8;
+  }
+  .target-university .target-tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .target-university .t-tag {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 14px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ===== PLAN ===== */
+  .plan-week {
+    margin-bottom: 14px;
+  }
+  .plan-week-title {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .plan-week-title .week-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  .plan-week-items {
+    padding-left: 16px;
+    border-left: 2px dashed #d0d8d8;
+  }
+  .plan-week-items .plan-item {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink-light);
+    margin-bottom: 4px;
+    padding: 3px 0;
+  }
+  .plan-week-items .plan-item .bold { font-weight: 600; color: var(--ink); }
+
+  /* ===== SUBJECT SELECTION ===== */
+  .selection-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .selection-card {
+    background: var(--paper);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    border: 2px solid var(--border);
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .selection-card.recommend {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .selection-card .sel-emoji { font-size: 28px; margin-bottom: 6px; }
+  .selection-card .sel-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .selection-card .sel-desc {
+    font-size: 11px;
+    color: var(--ink-light);
+    line-height: 1.5;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .selection-card .sel-badge {
+    font-family: 'Noto Sans SC', sans-serif;
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 6px;
+    background: var(--accent);
+    color: #fff;
+    letter-spacing: 0.5px;
+  }
+
+  /* ===== PARENTS ===== */
+  .parents-section {
+    background: #faf6f0;
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    margin: 0 16px 20px;
+    border: 1px solid #e8dfd0;
+  }
+  .parents-section h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #8b6914;
+    margin-bottom: 14px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+  .parents-section .parents-body {
+    font-size: 14px;
+    color: #5c4a2a;
+    line-height: 2;
+  }
+  .parents-section .highlight-box {
+    background: #fff;
+    border: 1px solid #e8d5a0;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 14px;
+  }
+  .parents-section .highlight-box .hl-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--rose);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .parents-section .highlight-box p {
+    font-size: 13px;
+    color: #5c4a2a;
+    line-height: 1.9;
+  }
+
+  /* ===== DIVIDER ===== */
+  .divider {
+    text-align: center;
+    margin: 28px 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .divider .dot { width: 4px; height: 4px; background: #c8c0b4; border-radius: 50%; }
+  .divider .sep { width: 28px; height: 1px; background: #d8d0c4; }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    padding: 24px 20px 40px;
+    font-size: 12px;
+    color: #b0a89a;
+    letter-spacing: 0.5px;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+
+  /* ===== SAVE OVERLAY ===== */
+  .save-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .save-overlay.show { display: flex; }
+  .save-overlay .save-toast {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    max-width: 300px;
+  }
+  .save-overlay .save-toast .check-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  .save-overlay .save-toast p {
+    font-size: 14px;
+    color: var(--ink);
+    font-family: 'Noto Sans SC', sans-serif;
+    margin-bottom: 12px;
+  }
+  .save-overlay .save-toast img {
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    margin-bottom: 12px;
+  }
+  .save-overlay .save-toast .close-btn {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 16px;
+  }
+
+  /* ===== MOBILE OPTIMIZATION ===== */
+  .long-press-hint {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    z-index: 200;
+    pointer-events: none;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <span class="logo">📋 学业诊断规划报告</span>
+  <button class="save-btn" onclick="saveAsImage()">📸 一键保存</button>
+</div>
+
+<div id="capture-area">
+
+<!-- HERO -->
+<div class="hero">
+  <span class="tag">初升高 · 2026 暑假衔接</span>
+  <h1><span class="name">付庆睿</span>同学</h1>
+  <p class="subtitle">学业诊断与升学规划报告</p>
+  <div class="decorative-line"></div>
+</div>
+
+<!-- PROFILE CARD -->
+<div class="profile-card" id="profile">
+  <div class="student-avatar">🎓</div>
+  <h2>付庆睿</h2>
+  <p class="profile-desc">初三升高一 · 男孩 · 黑龙江省 · 走读 · 已被当地重点高中录取</p>
+
+  <div class="profile-tags">
+    <span class="profile-tag good">✓ 学习态度端正</span>
+    <span class="profile-tag highlight">✓ 目标职业：医护 / 医疗科研</span>
+    <span class="profile-tag info">✓ 已被重点高中录取</span>
+    <span class="profile-tag warn">⚠ 数理化需强化突破</span>
+  </div>
+</div>
+
+<!-- STATS ROW -->
+<div class="stats-row" id="stats">
+  <div class="stat-item">
+    <div class="stat-num warn">759</div>
+    <div class="stat-label">中考总分</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num good">91</div>
+    <div class="stat-label">生物（最高分）</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num info">6科</div>
+    <div class="stat-label">待提升科目</div>
+  </div>
+</div>
+
+<!-- SECTION: Overall Diagnosis -->
+<div class="section" id="diagnosis">
+  <div class="section-header">
+    <div class="section-icon blue">🔍</div>
+    <h3>整体诊断分析</h3>
+  </div>
+
+  <div class="empathy-block">
+    <div class="empathy-title">💛 庆睿同学，你真的很棒</div>
+    <p>
+      首先想对你说：<strong>能在这个年纪就明确知道自己想成为一名医护人员、医疗科研工作者，这本身就非常了不起。</strong>很多同学到了高三还不知道自己未来要做什么，而你已经在初三就看清了方向——这份早慧，是你最宝贵的财富。<br><br>
+      你的生物考了91分，这说明你对生命科学有天然的亲近感和悟性。选择医学这条路，你是有底子和天赋的，不是凭空而来的梦想。<br><br>
+      759分的总分不算低，数理化这几科虽然暂时不理想，但<strong>初三升高一这个暑假恰恰是弯道超车的最佳窗口期</strong>。你不是"不行"，你只是"还没到发力的时候"。这份报告就是帮你找到发力方向的。
+    </p>
+  </div>
+
+  <div class="card" style="margin-top: 12px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--ink);">📊 各科成绩对比（满分按各科中考标准折算比例）</div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-label"><span class="subject">🔬 生物</span><span class="score good">91分 · 优秀</span></div>
+      <div class="score-bar-track"><div class="score-bar-fill good" style="width:91%"></div></div>
+    </div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-label"><span class="subject">📖 语文</span><span class="score mid">85分 · 良好</span></div>
+      <div class="score-bar-track"><div class="score-bar-fill mid" style="width:71%"></div></div>
+    </div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-label"><span class="subject">🧮 数学</span><span class="score low">74分 · 待突破</span></div>
+      <div class="score-bar-track"><div class="score-bar-fill low" style="width:62%"></div></div>
+    </div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-label"><span class="subject">🌐 英语</span><span class="score low">71分 · 待突破</span></div>
+      <div class="score-bar-track"><div class="score-bar-fill low" style="width:59%"></div></div>
+    </div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-label"><span class="subject">⚡ 物理</span><span class="score low">66分 · 需强化</span></div>
+      <div class="score-bar-track"><div class="score-bar-fill low" style="width:55%"></div></div>
+    </div>
+    <div class="score-bar-wrap">
+      <div class="score-bar-label"><span class="subject">🧪 化学</span><span class="score low">66分 · 需强化</span></div>
+      <div class="score-bar-track"><div class="score-bar-fill low" style="width:55%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: Quantitative Tags -->
+<div class="section" id="tags">
+  <div class="section-header">
+    <div class="section-icon gold">🏷️</div>
+    <h3>庆睿的量化画像</h3>
+  </div>
+
+  <div class="card">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 6px;font-weight:700;color:var(--ink);width:40%;">综合潜力指数</td>
+        <td style="padding:10px 6px;color:var(--accent);">⭐⭐⭐⭐ <span style="color:var(--ink-light);font-size:12px;">（高潜力型）</span></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 6px;font-weight:700;color:var(--ink);">目标匹配度</td>
+        <td style="padding:10px 6px;color:var(--sage);">⭐⭐⭐⭐⭐ <span style="color:var(--ink-light);font-size:12px;">（生物天赋加持）</span></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 6px;font-weight:700;color:var(--ink);">理科基础</td>
+        <td style="padding:10px 6px;color:var(--gold);">⭐⭐⭐ <span style="color:var(--ink-light);font-size:12px;">（有基础，待系统化）</span></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 6px;font-weight:700;color:var(--ink);">英语底子</td>
+        <td style="padding:10px 6px;color:var(--gold);">⭐⭐⭐ <span style="color:var(--ink-light);font-size:12px;">（词汇语法待补）</span></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 6px;font-weight:700;color:var(--ink);">学习态度</td>
+        <td style="padding:10px 6px;color:var(--sage);">⭐⭐⭐⭐ <span style="color:var(--ink-light);font-size:12px;">（态度端正，肯下功夫）</span></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 6px;font-weight:700;color:var(--ink);">目标清晰度</td>
+        <td style="padding:10px 6px;color:var(--sage);">⭐⭐⭐⭐⭐ <span style="color:var(--ink-light);font-size:12px;">（职业方向明确）</span></td>
+      </tr>
+      <tr>
+        <td style="padding:10px 6px;font-weight:700;color:var(--ink);">暑假窗口价值</td>
+        <td style="padding:10px 6px;color:var(--rose);">🔥 极关键 <span style="color:var(--ink-light);font-size:12px;">（逆袭黄金期）</span></td>
+      </tr>
+    </table>
+    <div style="margin-top:14px;padding:12px;background:#faf8f5;border-radius:10px;font-size:13px;line-height:1.8;text-align:center;color:var(--ink-light);">
+      <strong style="color:var(--ink);">综合评估：</strong>庆睿属于<strong style="color:var(--accent);">"方向明确但理科偏弱"型</strong>的潜力选手。<br>
+      生物91分说明<span style="color:var(--sage);font-weight:600;">理科思维没有问题</span>，数理化分数低更多是<strong>初中知识体系不够扎实 + 应试技巧不足</strong>，而非能力问题。这个暑假如果方法得当，完全可以实现质的飞跃。
+    </div>
+  </div>
+</div>
+
+<!-- DIVIDER -->
+<div class="divider">
+  <div class="dot"></div><div class="sep"></div><div class="dot"></div><div class="sep"></div><div class="dot"></div>
+</div>
+
+<!-- SECTION: Subject Analysis -->
+<div class="section" id="subjects">
+  <div class="section-header">
+    <div class="section-icon rose">📝</div>
+    <h3>六科逐一点评与对策</h3>
+  </div>
+  <p style="font-size:12px;color:var(--ink-light);margin-bottom:14px;padding-left:46px;">每一科都从现状、问题根源、突破方案三个维度分析</p>
+
+  <!-- Biology -->
+  <div class="subject-card">
+    <div class="subj-header">
+      <div class="subj-emoji bio-bg">🧬</div>
+      <span class="subj-name">生物</span>
+      <span class="subj-score" style="color:var(--sage);">91分 · 优势学科</span>
+    </div>
+    <span class="subj-focus focus-high">★ 优势学科 · 继续保持</span>
+    <div class="subj-detail">
+      <p><span class="bold">现状诊断：</span>91分在所有科目中一骑绝尘，说明你对生命科学有<span class="bold">极强的直觉和理解力</span>。这是你选择医学方向最扎实的底气来源，不是偶然，是天赋显现。</p>
+      <p style="margin-top:6px;"><span class="bold">高中衔接重点：</span>初中生物偏记忆，高中生物（必修一分子与细胞、必修二遗传与进化）会更偏理解和逻辑推理。遗传学计算是很多学生的噩梦，需要提前预习。</p>
+    </div>
+    <div class="subj-action">
+      💡 <strong>暑假行动：</strong>预习高一生物必修一前3章（细胞的分子组成、细胞结构、细胞代谢），每天30分钟，重点是建立"结构与功能相适应"的思维方式。
+    </div>
+  </div>
+
+  <!-- Chinese -->
+  <div class="subject-card">
+    <div class="subj-header">
+      <div class="subj-emoji chn-bg">📖</div>
+      <span class="subj-name">语文</span>
+      <span class="subj-score" style="color:var(--gold);">85分 · 良好</span>
+    </div>
+    <span class="subj-focus focus-mid">● 中等偏上 · 稳中求进</span>
+    <div class="subj-detail">
+      <p><span class="bold">现状诊断：</span>85分在文科中属于中上水平，说明你有一定的阅读积累和表达能力。但距冲击一本医学院还有10-15分的提升空间，主要在<span class="bold">古诗文阅读和作文深度</span>上。</p>
+      <p style="margin-top:6px;"><span class="bold">高中衔接重点：</span>高中语文阅读量和难度跳跃极大，文言文从"读懂"变为"鉴赏+思辨"，作文从600字记叙文跃升到800字议论文。</p>
+    </div>
+    <div class="subj-action">
+      💡 <strong>暑假行动：</strong>① 背诵高一上必背古诗文（《短歌行》《归园田居》《梦游天姥吟留别》《登高》《琵琶行》等）；② 每周精读2篇优秀议论文，积累论据素材；③ 每天练字15分钟（卷面分在高考中极为重要）。
+    </div>
+  </div>
+
+  <!-- Math -->
+  <div class="subject-card">
+    <div class="subj-header">
+      <div class="subj-emoji math-bg">🧮</div>
+      <span class="subj-name">数学</span>
+      <span class="subj-score" style="color:var(--rose);">74分 · 重点突破</span>
+    </div>
+    <span class="subj-focus focus-low">⚠ 核心薄弱 · 需系统性重建</span>
+    <div class="subj-detail">
+      <p><span class="bold">现状诊断：</span>74分是六科中的重灾区，也是提升空间最大的一科。初中数学74分反映出<span class="bold">函数思维、几何证明、方程思想</span>三个模块存在系统性漏洞。好消息是：初中数学和高中数学有较大的"重启"机会——高中会重新讲函数、重新讲几何（解析几何），只要初中基础概念补齐，高中跟上完全可能。</p>
+      <p style="margin-top:6px;"><span class="bold">高中衔接重点：</span>高一上学期数学（必修第一册）的核心是<span class="bold">集合与逻辑、不等式、函数</span>。函数是整个高中数学的灵魂，占比超过60%。</p>
+    </div>
+    <div class="subj-action">
+      💡 <strong>暑假行动（重中之重）：</strong>① 用7天集中攻克初中函数（一次函数、二次函数、反比例函数）的图象与性质；② 《高中必刷题·必修一》集合与逻辑部分；③ 每天至少1.5小时数学，雷打不动；④ 准备一个"错题本"，所有做错的题抄下来，标注错误原因和正确思路。
+    </div>
+  </div>
+
+  <!-- English -->
+  <div class="subject-card">
+    <div class="subj-header">
+      <div class="subj-emoji eng-bg">🌐</div>
+      <span class="subj-name">英语</span>
+      <span class="subj-score" style="color:var(--rose);">71分 · 重点突破</span>
+    </div>
+    <span class="subj-focus focus-low">⚠ 基础薄弱 · 词汇量是关键</span>
+    <div class="subj-detail">
+      <p><span class="bold">现状诊断：</span>71分说明词汇量和语法基础都有短板。英语与数学不同——英语是<span class="bold">"最公平"的学科</span>，只要投入足够的时间，分数一定会上来。高中英语要求的词汇量从初中1600词跃升到3500词+，这个差距必须在暑假开始弥合。</p>
+      <p style="margin-top:6px;"><span class="bold">高中衔接重点：</span>高一开始就要面对大量阅读理解（4篇/次考试）和完形填空，词汇量不足会直接导致读不懂题。</p>
+    </div>
+    <div class="subj-action">
+      💡 <strong>暑假行动：</strong>① 每天背30个新单词（用"百词斩"或"墨墨背单词"APP），41天共1230词，先把高中词汇第一轮过掉；② 每天朗读1篇高一难度的短文（10分钟），培养语感；③ 系统复习初中8大时态和被动语态，为高中语法打底。
+    </div>
+  </div>
+
+  <!-- Physics -->
+  <div class="subject-card">
+    <div class="subj-header">
+      <div class="subj-emoji phy-bg">⚡</div>
+      <span class="subj-name">物理</span>
+      <span class="subj-score" style="color:var(--rose);">66分 · 需强化</span>
+    </div>
+    <span class="subj-focus focus-low">⚠ 需重构思维模式</span>
+    <div class="subj-detail">
+      <p><span class="bold">现状诊断：</span>66分是除化学外最低的科目。初中物理偏"现象描述"，高中物理则完全是<span class="bold">数学建模+逻辑推导</span>。初中力学和电学没搞透，到高中会很吃力。但好消息是：高一物理（必修一）从运动学开始，与初中内容有一定"重启"。</p>
+      <p style="margin-top:6px;"><span class="bold">高中衔接重点：</span>高一上物理核心：运动的描述 → 匀变速直线运动 → 相互作用（重力弹力摩擦力）→ 牛顿运动定律。牛顿定律是整个高中力学的基石。</p>
+    </div>
+    <div class="subj-action">
+      💡 <strong>暑假行动：</strong>① 复习初中力学核心：力的三要素、重力/弹力/摩擦力、二力平衡、压强浮力；② 预习高一物理必修一前2章（质点、参考系、位移、速度、加速度），建立"矢量"概念；③ 每天做5道基础计算题，养成"画图→列式→求解→检验"的解题习惯。
+    </div>
+  </div>
+
+  <!-- Chemistry -->
+  <div class="subject-card">
+    <div class="subj-header">
+      <div class="subj-emoji che-bg">🧪</div>
+      <span class="subj-name">化学</span>
+      <span class="subj-score" style="color:var(--rose);">66分 · 需强化</span>
+    </div>
+    <span class="subj-focus focus-low">⚠ 需重新建立体系认知</span>
+    <div class="subj-detail">
+      <p><span class="bold">现状诊断：</span>66分和物理一样处于低分段。初中化学以记忆性内容为主（元素符号、化学式、化学方程式），但66分说明连基础记忆都不过关。高中化学则会加入大量<span class="bold">定量计算和理论推导</span>（物质的量、氧化还原反应、离子反应），初中基础不牢会直接导致高中听不懂。</p>
+      <p style="margin-top:6px;"><span class="bold">高中衔接重点：</span>高一化学必修一第一章就是"物质的量"——这是整个高中化学计算的核心工具。前20号元素的原子结构、化合价、化学式书写是必过关卡。</p>
+    </div>
+    <div class="subj-action">
+      💡 <strong>暑假行动：</strong>① 默写1-20号元素符号、名称、原子序数、原子结构示意图，每天默一遍直到全对；② 背诵常见化合价口诀和酸碱盐溶解性表；③ 预习"物质的量"概念（n=m/M），这是化学从"文科"变成"理科"的第一道门槛。
+    </div>
+  </div>
+</div>
+
+<!-- DIVIDER -->
+<div class="divider">
+  <div class="dot"></div><div class="sep"></div><div class="dot"></div><div class="sep"></div><div class="dot"></div>
+</div>
+
+<!-- SECTION: Target Universities -->
+<div class="section" id="target">
+  <div class="section-header">
+    <div class="section-icon green">🎯</div>
+    <h3>目标院校分析 · 你的医学之路</h3>
+  </div>
+
+  <div class="target-university">
+    <div class="target-label">DREAM SCHOOLS</div>
+    <div class="target-schools">
+      🏥 哈尔滨医科大学（临床医学 / 基础医学）<br>
+      🔬 中国医科大学（医学检验 / 药学）<br>
+      💊 黑龙江中医药大学（中药学 / 中西医结合）
+    </div>
+    <div class="target-detail">
+      以上三所是黑龙江省内及周边最优质的医学类院校。哈尔滨医科大学临床医学专业在东北地区排名前三，全国医学类院校排名前25。2025年黑龙江理科录取分数线约在<strong>560-580分</strong>区间。<br><br>
+      以你目前759分（中考）的基础，换算预估高考潜力约在<strong>500-540分</strong>区间（当前水平），距离哈医大还有<strong>40-80分</strong>的差距。这听上去不小，但——<br><br>
+      <strong>高中三年，每年进步20-30分是完全可行的。</strong>尤其是你数理化这三科目前偏低，恰恰意味着提升空间巨大。把数学从74提到110+、英语从71提到110+、物理化学从66提到80+，就已经贡献了近100分的增量。
+    </div>
+    <div class="target-tag-row">
+      <span class="t-tag">🏥 临床医学5年制</span>
+      <span class="t-tag">🔬 基础医学研究</span>
+      <span class="t-tag">💊 药学4年制</span>
+      <span class="t-tag">📋 选科要求：物化生</span>
+      <span class="t-tag">📊 目标分：560+</span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--ink);">🏫 黑龙江省医学类院校详情</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <tr style="background:#f9f7f2;">
+        <td style="padding:8px;font-weight:700;">院校</td>
+        <td style="padding:8px;font-weight:700;">王牌专业</td>
+        <td style="padding:8px;font-weight:700;">预估分数线</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px;">哈尔滨医科大学</td>
+        <td style="padding:8px;">临床医学、麻醉学</td>
+        <td style="padding:8px;color:var(--accent);font-weight:600;">560-580</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px;">中国医科大学</td>
+        <td style="padding:8px;">医学影像、检验</td>
+        <td style="padding:8px;color:var(--accent);font-weight:600;">540-560</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px;">黑龙江中医药大学</td>
+        <td style="padding:8px;">中药学、中西医结合</td>
+        <td style="padding:8px;color:var(--accent);font-weight:600;">500-530</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;">齐齐哈尔医学院</td>
+        <td style="padding:8px;">临床医学（保底）</td>
+        <td style="padding:8px;color:var(--gold);font-weight:600;">460-490</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- DIVIDER -->
+<div class="divider">
+  <div class="dot"></div><div class="sep"></div><div class="dot"></div><div class="sep"></div><div class="dot"></div>
+</div>
+
+<!-- SECTION: 选科规划 -->
+<div class="section" id="selection">
+  <div class="section-header">
+    <div class="section-icon lavender">🗺️</div>
+    <h3>选科规划建议</h3>
+  </div>
+
+  <p style="font-size:13px;color:var(--ink-light);margin-bottom:14px;padding-left:46px;line-height:1.8;">
+    黑龙江省实行"3+1+2"新高考模式。医学类专业绝大多数要求<strong>"物理+化学"</strong>组合。
+  </p>
+
+  <div class="selection-grid">
+    <div class="selection-card recommend">
+      <div class="sel-emoji">🥇</div>
+      <div class="sel-name">物化生</div>
+      <div class="sel-desc">专业覆盖率最高<br>医学类首选必选组合</div>
+      <span class="sel-badge">强烈推荐</span>
+    </div>
+    <div class="selection-card">
+      <div class="sel-emoji">🥈</div>
+      <div class="sel-name">物化地</div>
+      <div class="sel-desc">生物可自学补充<br>地理赋分可能更高</div>
+    </div>
+    <div class="selection-card">
+      <div class="sel-emoji">🥉</div>
+      <div class="sel-name">物化政</div>
+      <div class="sel-desc">部分医学专业受限<br>适合备选方案</div>
+    </div>
+    <div class="selection-card">
+      <div class="sel-emoji">⚠️</div>
+      <div class="sel-name">历史类组合</div>
+      <div class="sel-desc">医学专业几乎不招<br>与目标冲突</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--accent);">💡 选科核心建议</div>
+    <p style="font-size:13px;color:var(--ink-light);line-height:1.9;">
+      <strong>首选"物理+化学+生物"</strong>——这是通向临床医学、基础医学、药学、医学检验等所有医学相关专业的"万能钥匙"。<br><br>
+      <strong>你的生物已经91分</strong>，说明你对这门学科有天然的亲和力，不要浪费这个优势。物理和化学虽然现在分数不高，但只要这个暑假把基础补上来，高一跟着走，到了高三完全可以达到医学类院校的要求。<br><br>
+      唯一需要注意的是：<strong>物化生组合竞争激烈</strong>（学霸扎堆），赋分制下可能不占优势。但以你目前的分数结构，这是最优解。
+    </p>
+  </div>
+</div>
+
+<!-- DIVIDER -->
+<div class="divider">
+  <div class="dot"></div><div class="sep"></div><div class="dot"></div><div class="sep"></div><div class="dot"></div>
+</div>
+
+<!-- SECTION: Summer Plan -->
+<div class="section" id="plan">
+  <div class="section-header">
+    <div class="section-icon blue">📅</div>
+    <h3>暑假学习计划 · 7月1日—8月10日</h3>
+  </div>
+  <p style="font-size:12px;color:var(--ink-light);margin-bottom:14px;padding-left:46px;">共41天，分为三个阶段：基础复盘 → 能力提升 → 衔接预热</p>
+
+  <div class="card">
+    <div class="plan-week">
+      <div class="plan-week-title"><span class="week-dot"></span>第一阶段：初中基础复盘（7月1日—7月14日 · 14天）</div>
+      <div class="plan-week-items">
+        <div class="plan-item"><span class="bold">数学（每天1.5h）：</span>一次函数/二次函数/反比例函数图象性质全面复习 + 配套练习（《初中必刷题·函数专题》）</div>
+        <div class="plan-item"><span class="bold">英语（每天1h）：</span>初中8大时态系统梳理 + 每天背30个高中词汇 + 朗读1篇短文</div>
+        <div class="plan-item"><span class="bold">物理（每天40min）：</span>力学基础（力的三要素、二力平衡、压强浮力）复习+做题</div>
+        <div class="plan-item"><span class="bold">化学（每天30min）：</span>1-20号元素默写 + 化合价口诀 + 化学式书写练习</div>
+        <div class="plan-item"><span class="bold">语文（每天30min）：</span>每天练字15分钟 + 背诵1首古诗文</div>
+        <div class="plan-item"><span class="bold">生物（每天20min）：</span>翻阅高一教材前2章，熟悉细胞结构相关术语</div>
+      </div>
+    </div>
+
+    <div class="plan-week">
+      <div class="plan-week-title"><span class="week-dot"></span>第二阶段：能力提升突破（7月15日—7月28日 · 14天）</div>
+      <div class="plan-week-items">
+        <div class="plan-item"><span class="bold">数学（每天1.5h）：</span>几何证明专项（三角形全等/相似、勾股定理、圆的性质）+ 预习高中《集合与逻辑》</div>
+        <div class="plan-item"><span class="bold">英语（每天1h）：</span>被动语态+宾语从句专项 + 每天继续背30词 + 尝试阅读理解题</div>
+        <div class="plan-item"><span class="bold">物理（每天40min）：</span>电学基础复习（欧姆定律、电功率）→ 预习高中《运动的描述》</div>
+        <div class="plan-item"><span class="bold">化学（每天30min）：</span>化学方程式书写+配平强化 + 预习"物质的量"概念</div>
+        <div class="plan-item"><span class="bold">语文（每天30min）：</span>每周读2篇优秀议论文+练笔1篇400字短文</div>
+        <div class="plan-item"><span class="bold">生物（每天20min）：</span>预习细胞代谢章节（酶、ATP、光合作用基础）</div>
+      </div>
+    </div>
+
+    <div class="plan-week">
+      <div class="plan-week-title"><span class="week-dot"></span>第三阶段：高中衔接预热（7月29日—8月10日 · 13天）</div>
+      <div class="plan-week-items">
+        <div class="plan-item"><span class="bold">数学（每天1.5h）：</span>深入预习《不等式》和《函数概念与性质》，做高一《必刷题》前2章</div>
+        <div class="plan-item"><span class="bold">英语（每天1h）：</span>定语从句+名词性从句入门 + 词汇量测试（目标达到1800+）</div>
+        <div class="plan-item"><span class="bold">物理（每天40min）：</span>匀变速直线运动公式+图象 + 牛顿第一、第三定律</div>
+        <div class="plan-item"><span class="bold">化学（每天30min）：</span>氧化还原反应基础 + 离子反应初步</div>
+        <div class="plan-item"><span class="bold">语文（每天30min）：</span>完成全部高一上古诗文背诵 + 练字形成习惯</div>
+        <div class="plan-item"><span class="bold">生物（每天20min）：</span>预习遗传学基础（孟德尔定律、基因分离定律）</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--ink);">⏰ 每日作息建议</div>
+    <table style="width:100%;font-size:12px;border-collapse:collapse;">
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;font-weight:600;">07:30</td><td style="padding:6px 4px;">起床、洗漱、早餐</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;font-weight:600;">08:00-08:30</td><td style="padding:6px 4px;">英语单词背诵 + 朗读</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;font-weight:600;">08:40-10:10</td><td style="padding:6px 4px;color:var(--rose);">数学集中攻坚（1.5小时）</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;font-weight:600;">10:20-10:50</td><td style="padding:6px 4px;">语文（古诗文/练字）</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;font-weight:600;">11:00-11:40</td><td style="padding:6px 4px;">物理/化学（隔天轮换）</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;font-weight:600;">12:00-14:00</td><td style="padding:6px 4px;">午餐 + 午休（务必睡30分钟）</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;font-weight:600;">14:00-14:40</td><td style="padding:6px 4px;">英语阅读理解/语法专项</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;font-weight:600;">14:50-15:10</td><td style="padding:6px 4px;">生物预习</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;font-weight:600;">15:30-17:00</td><td style="padding:6px 4px;">自由活动 / 体育锻炼（打球跑步）</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;font-weight:600;">19:00-20:00</td><td style="padding:6px 4px;">错题整理 + 当天复习回顾</td></tr>
+      <tr><td style="padding:6px 4px;font-weight:600;">22:30</td><td style="padding:6px 4px;">睡觉（保证8小时睡眠）</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- DIVIDER -->
+<div class="divider">
+  <div class="dot"></div><div class="sep"></div><div class="dot"></div><div class="sep"></div><div class="dot"></div>
+</div>
+
+<!-- SECTION: Parents -->
+<div class="parents-section" id="parents">
+  <h3>🌿 致庆睿爸爸妈妈的话</h3>
+
+  <div class="parents-body">
+    <p>
+      叔叔阿姨好，以下是我站在学业规划的角度，想和你们真诚沟通的几点：
+    </p>
+
+    <p style="margin-top:10px;">
+      <strong>第一，请一定多多肯定孩子。</strong>庆睿在这个年纪就能清晰说出"我想做医护人员、想做医疗科研"，这份目标感比很多高三学生都强。生物91分不是偶然，是他在自己热爱的领域里闪闪发光的证明。数理化成绩不理想，不代表他没有理科思维——他只是还没找到正确的方法和节奏。<strong>多鼓励，少责备；多看进步，少比差距。</strong>
+    </p>
+
+    <p style="margin-top:10px;">
+      <strong>第二，这个暑假是关键窗口，但不能只靠孩子自己。</strong>41天的暑假，如果规划得当、执行到位，完全可以实现数理化的"触底反弹"。但初中基础薄弱的科目，<strong>仅靠孩子自己翻书做题，效率很低，容易三天打鱼两天晒网</strong>。建议家长帮孩子把每日计划打印出来贴在墙上，每天晚上花5分钟和孩子一起复盘当天的完成情况，及时调整。
+    </p>
+
+    <div class="highlight-box">
+      <div class="hl-title">⚠️ 重要建议：请重视校外优质师资的引入</div>
+      <p>
+        坦诚地说，<strong>当前学校老师的教学，已经接近把孩子教到了目前水平的天花板。</strong>这里没有任何否定学校老师的意思——他们尽职尽责，但一个老师面对几十个学生，不可能针对庆睿一个人的薄弱点做精准补差。<br><br>
+        如果希望在高中实现质的突破，<strong>必须向外寻找更优质的师资资源。</strong>建议这个暑假至少给数学和英语各找一位有经验的一对一辅导老师（或优质的线上名师课程），针对初中基础漏洞做精准诊断和定向突破。好的老师能在几节课内找到孩子"卡住"的那个点，效率远高于孩子自己摸索。<br><br>
+        高中三年是一场长跑，<strong>起跑阶段的装备和教练决定了后面的竞争力。</strong>现在投入在优质师资上的每一分钱，都是在为三年后的高考成绩做投资。尤其是数学和英语这两科，一旦高一上学期再落下，后面追赶的难度会指数级上升。<br><br>
+        <strong>一句话：学校保基础，校外求突破。</strong>让孩子见识到更优秀的老师、更高效的方法，他的上限才会被重新定义。
+      </p>
+    </div>
+
+    <p style="margin-top:14px;">
+      <strong>第三，选科方向上，请支持孩子走"物化生"路线。</strong>这是通向所有医学专业的必经之路。物理化学现在分数低没关系，高中三年完全来得及。不要因为暂时的分数而退而求其次选择历史类——那会直接堵死医学这条路。
+    </p>
+
+    <p style="margin-top:10px;">
+      <strong>最后，请相信孩子的潜力。</strong>一个在初三就能把生物考到91分的孩子，他的学习能力和专注力一定没有问题。数理化的暂时落后，更多是"还没开窍"而不是"没有能力"。高中是一个全新的起跑线——初中的排名和分数，到高中会大洗牌。<strong>庆睿有目标、有态度、有生物天赋做底气，只要这个暑假打好基础，高中完全有机会成为一匹黑马。</strong>
+    </p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p>付庆睿 · 学业诊断规划报告</p>
+  <p style="margin-top:4px;">2026年7月 · 初升高暑假衔接专案</p>
+  <p style="margin-top:4px;font-size:10px;">黑龙江 · 物化生方向 · 目标：医学类院校</p>
+</div>
+
+</div>
+
+<!-- SAVE OVERLAY -->
+<div class="save-overlay" id="saveOverlay">
+  <div class="save-toast">
+    <div class="check-icon">✅</div>
+    <p>图片已生成</p>
+    <img id="savedImage" style="display:none;" />
+    <p style="font-size:12px;color:var(--ink-light);">长按上方图片即可保存到手机</p>
+    <button class="close-btn" onclick="closeOverlay()">关闭</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js">
+</script>
+<script>
+  function saveAsImage() {
+    const overlay = document.getElementById('saveOverlay');
+    const savedImg = document.getElementById('savedImage');
+    overlay.classList.add('show');
+
+    const captureArea = document.getElementById('capture-area');
+    const originalWidth = captureArea.style.width;
+    captureArea.style.width = '480px';
+    const areaHeight = captureArea.scrollHeight;
+    const areaWidth = 480;
+
+    html2canvas(captureArea, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#faf8f5',
+      width: areaWidth,
+      height: areaHeight,
+      windowWidth: areaWidth,
+      windowHeight: areaHeight,
+      x: 0,
+      y: 0,
+      scrollX: 0,
+      scrollY: 0
+    }).then(function(canvas) {
+      // Restore original width after capture
+      captureArea.style.width = originalWidth;
+      
+      const dataUrl = canvas.toDataURL('image/png');
+      savedImg.src = dataUrl;
+      savedImg.style.display = 'block';
+
+      // Auto download
+      const link = document.createElement('a');
+      link.download = '付庆睿_学业规划报告.png';
+      link.href = dataUrl;
+      link.click();
+    }).catch(function(err) {
+      // Restore on error too
+      captureArea.style.width = originalWidth;
+      console.error('截图失败，请尝试手动截图:', err);
+      overlay.querySelector('.save-toast p').textContent = '生成失败，请尝试手机截图';
+    });
+  }
+
+  function closeOverlay() {
+    document.getElementById('saveOverlay').classList.remove('show');
+  }
+</script>
+
+</body>
+</html>

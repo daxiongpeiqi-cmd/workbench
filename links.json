@@ -1,0 +1,21 @@
+{
+  "systems": [
+    {"title":"哥伦布系统","desc":"咨询 / 客户工作系统","emoji":"🧭","url":"https://keosms.youdao.com/modeselect?returnurl=https://consultan-center-prod.inner.youdao.com/?biz=1"},
+    {"title":"北京基地看板","desc":"北京基地数据看板","emoji":"📈","url":"https://shimo.youdao.com/sheets/3aP4gd2llX2KTEbE/MODOC"}
+  ],
+  "materials": [
+    {"title":"销售流程梳理（大文档）","desc":"销售流程大文档","emoji":"📋","url":"https://shimo.youdao.com/sheets/AX5rmdEnvg2lTGLa/B8zwP"},
+    {"title":"当期转化课（体验课课表到课奖励）","desc":"体验课课表到课奖励","emoji":"🎯","url":"https://shimo.youdao.com/sheets/AzoODnRbmEZbiRmw/MODOC"},
+    {"title":"知识视频学法体验课（正式课的体验）","desc":"正式课的体验","emoji":"🎬","url":"https://shimo.youdao.com/sheets/cJPTC6t6CJvGwVXc/5rEoQ"},
+    {"title":"新高一正价课素材（价格表课表）","desc":"新高一价格表课表","emoji":"📘","url":"https://shimo.youdao.com/sheets/ZNLoDu1FYhf0cvfy/r61qp"},
+    {"title":"新高二正价课素材（价格表课表）","desc":"新高二价格表课表","emoji":"📗","url":"https://shimo.youdao.com/sheets/q4OzjlZRQjLwhBJW/JnebR"},
+    {"title":"新高三正价课素材（价格表课表）","desc":"新高三价格表课表","emoji":"📙","url":"https://shimo.youdao.com/sheets/3OZW5db8a8noCdP0/rx5EW"},
+    {"title":"现高三正价课素材（价格表课表）","desc":"现高三价格表课表","emoji":"📕","url":"https://shimo.youdao.com/sheets/vSbrsXmrtLMpxTKc/1qYx9"},
+    {"title":"2025年提分外化素材（喜报押题）","desc":"喜报押题","emoji":"🏆","url":"https://shimo.youdao.com/sheets/vS5qJOwHkTjYMloZ/h566l"},
+    {"title":"资料大全（回捞用）","desc":"回捞用资料","emoji":"📦","url":"https://shimo.youdao.com/sheets/3j04VnGMjBpwHxgE/MODOC"},
+    {"title":"下单id（正式课下单）","desc":"正式课下单","emoji":"🛒","url":"https://shimo.youdao.com/sheets/hvTYwhqrpgKhchVK/jVfxz"},
+    {"title":"优惠券id（正式课优惠券）","desc":"正式课优惠券","emoji":"🎟️","url":"https://shimo.youdao.com/docs/VG3xkcgGCJ6pwpR3"},
+    {"title":"新世界物料","desc":"新世界物料","emoji":"📣","url":"https://shimo.youdao.com/sheets/qRogvdReNMRQhJw1/xhfvt"},
+    {"title":"清北高分学员采访&短视频","desc":"清北高分学员采访","emoji":"🎥","url":"https://shimo.youdao.com/sheets/lTz9smP563AeRCkc/1MjX9"}
+  ]
+}

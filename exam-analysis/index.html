@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="green">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>试卷诊断报告系统</title>
+<script>
+  /* 主题提前设定，避免闪烁 */
+  (function(){
+    try{
+      var t = localStorage.getItem('exam_theme');
+      if(t) document.documentElement.setAttribute('data-theme', t);
+    }catch(e){}
+  })();
+</script>
+<link rel="stylesheet" href="styles.css?v=20260811">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+</head>
+<body>
+
+<!-- 动态极光背景 + 暗角 -->
+<div class="aurora"></div>
+<div class="vignette"></div>
+
+<!-- 主题切换 -->
+<button id="themeFab" class="theme-fab" title="切换主题" aria-label="切换主题">🎨</button>
+<div id="themePop" class="theme-pop" style="display:none">
+  <div class="tp-opt" data-theme="green"><span class="dot g"></span>青绿</div>
+  <div class="tp-opt" data-theme="dark"><span class="dot d"></span>暗夜</div>
+  <div class="tp-opt" data-theme="morandi"><span class="dot m"></span>莫兰迪</div>
+  <div class="tp-opt" data-theme="pink"><span class="dot p"></span>粉橘</div>
+  <div class="tp-opt" data-theme="blue"><span class="dot b"></span>蓝调</div>
+</div>
+
+<!-- ============ 首次配置页：API 配置仅保存在使用者自己的浏览器 ============ -->
+<div id="gate" style="display:none">
+  <h1>试卷诊断报告系统</h1>
+  <p class="sub">首次使用请填写你自己的大模型 API 配置。<br>配置只保存在<b>你当前这台设备的浏览器</b>里，不会上传服务器、别人看不到。</p>
+  <div class="card gate-card">
+    <div class="card-t">大模型 API 配置</div>
+    <label>API Key
+      <input id="cfgKey" type="password" placeholder="ark-xxxxxxxx" autocomplete="off">
+    </label>
+    <label>Base URL
+      <input id="cfgBase" value="https://ark.cn-beijing.volces.com/api/v3">
+    </label>
+    <label>判分模型
+      <input id="cfgModel" list="modelList" value="doubao-seed-evolving">
+      <span class="hint">仅两个固定选项：<b>doubao-seed-evolving</b>（默认，低成本、已开通）／<b>doubao-seed-2-1-pro-260628</b>（精度更高、费用较高）。需要更高判分精度时下拉选后者。</span>
+    </label>
+    <label>视觉转录模型
+      <input id="cfgVision" list="visionList" value="doubao-seed-evolving">
+      <span class="hint">同上两个固定选项。<b>doubao-seed-evolving</b> 已可兼做图片读取；如需更强图文识别可选 <b>doubao-seed-2-1-pro-260628</b>。</span>
+    </label>
+    <datalist id="modelList">
+      <option value="doubao-seed-evolving"></option>
+      <option value="doubao-seed-2-1-pro-260628"></option>
+    </datalist>
+    <datalist id="visionList">
+      <option value="doubao-seed-evolving"></option>
+      <option value="doubao-seed-2-1-pro-260628"></option>
+    </datalist>
+    <label class="chk"><input type="checkbox" id="cfgSpeed" checked> ⚡ 速度优先（关闭深度思考，解析更快；关闭后复杂推理略弱）</label>
+    <button class="gen" id="cfgBtn">验证并进入</button>
+    <div id="cfgMsg" class="perr"></div>
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.7">
+      火山方舟控制台可获取 API Key<br>换设备 / 换浏览器时重新填写一次即可
+    </p>
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:4px;line-height:1.7">
+      提速逻辑：① 电子 PDF 直接抽文字层（不转图，读取秒级）；② 三类材料并行读取；③ 勾选「速度优先」关闭深度思考，解析更快。模型已固定为 <b>doubao-seed-evolving</b> 与 <b>doubao-seed-2-1-pro-260628</b> 两种，已移除其他旧版模型，避免选错导致反复重试扣费。
+    </p>
+  </div>
+</div>
+
+<!-- ============ 上传页 ============ -->
+<div id="setup" style="display:none">
+  <h1>试卷诊断报告系统</h1>
+  <p class="sub">上传试卷、答案解析、孩子答题情况，自动生成专业学情诊断报告。<br>
+    <a href="javascript:void(0)" id="editCfg" class="link-edit">⚙ 修改 API 配置</a>
+  </p>
+
+  <div class="card">
+    <div class="card-t">① 学生信息</div>
+    <div class="grid2">
+      <label>姓名<input id="stuName" placeholder="如：小明"></label>
+      <label>年级<input id="stuGrade" placeholder="如：高一"></label>
+      <label>学科<input id="stuSubject" placeholder="如：语文"></label>
+      <label>考试名称<input id="examName" placeholder="如：开学摸底考"></label>
+    </div>
+    <label style="margin-top:8px;">背景描述（可简述衔接 / 学习情况）
+      <textarea id="stuBg" rows="2" placeholder="如：初中毕业，未做系统初高衔接，主要靠自学与碎片化网络资料"></textarea>
+    </label>
+  </div>
+
+  <div class="card">
+    <div class="card-t">② 上传材料（试卷 / 答案解析 / 孩子答题 必传，老师资料选填）</div>
+    <div class="uploads">
+      <div class="up" data-kind="exam">
+        <div class="up-ic">📄</div>
+        <b>试卷</b><span>拖拽到此处，或点击选择 · PDF / 图片可多份</span>
+        <input type="file" accept=".pdf,image/*" multiple hidden>
+      </div>
+      <div class="up" data-kind="answer">
+        <div class="up-ic">🔑</div>
+        <b>答案解析</b><span>拖拽到此处，或点击选择 · 参考答案 + 评分标准</span>
+        <input type="file" accept=".pdf,image/*" multiple hidden>
+      </div>
+      <div class="up" data-kind="student">
+        <div class="up-ic">✍️</div>
+        <b>孩子答题</b><span>拖拽到此处，或点击选择 · 作答照片 / 扫描件</span>
+        <input type="file" accept=".pdf,image/*" multiple hidden>
+      </div>
+      <div class="up" data-kind="teacher">
+        <div class="up-ic">👩‍🏫</div>
+        <b>老师资料（选填）</b><span>拖拽到此处，或点击选择 · PDF / 图片 / TXT / JSON；上传后会结合资料与网络检索生成师资匹配介绍，并对应孩子薄弱点</span>
+        <input type="file" accept=".json,.txt,.pdf,image/*" multiple hidden>
+      </div>
+    </div>
+    <div id="fileList" class="filelist"></div>
+  </div>
+
+  <button id="genBtn" class="gen">生成诊断报告</button>
+  <div id="progress" class="progress"></div>
+
+  <!-- 实时打字预览区（生成开始时显示，生成结束自动隐藏） -->
+  <div id="live-stream" style="display:none">
+    <div class="live-hdr"><span class="dot"></span>模型正在生成 · <span id="live-stats">0 字</span></div>
+    <pre id="live-body" class="live-body"></pre>
+  </div>
+</div>
+
+<!-- ============ 报告页 ============ -->
+<div id="reportPage" style="display:none">
+  <div class="toolbar">
+    <button onclick="saveImg()">保存为图片</button>
+    <button class="alt" onclick="openCorrect()">✏️ 修正 / 补充</button>
+    <button class="alt" onclick="window.print()">打印 / 存 PDF</button>
+    <button class="alt" onclick="location.reload()">再生成一份</button>
+  </div>
+  <div id="capture-area"></div>
+  <!-- 导出专用区（屏幕不可见，截图专用，暖白主题 + 诊断标签总览） -->
+  <div id="export-area"></div>
+</div>
+
+<!-- ============ 修正输入弹窗 ============ -->
+<div id="correctModal" class="modal-mask" style="display:none" onclick="if(event.target===this)closeCorrect()">
+  <div class="modal-card">
+    <div class="modal-h">✏️ 修正 / 补充</div>
+    <div class="modal-sub">把识别有误或需要修改的地方写下来，比如：<br>
+      · "第 3 题应判正确，学生实际写的是…"<br>
+      · "学生姓名是李明，不是自动识别的…"<br>
+      · "文言文板块得分 8 分不是 6 分…"
+    </div>
+    <textarea id="correctInput" rows="6" placeholder="请输入你的修正内容…"></textarea>
+    <div class="modal-act">
+      <button class="alt" onclick="closeCorrect()">取消</button>
+      <button class="gen" onclick="submitCorrect()">提交并重新生成</button>
+    </div>
+    <div id="correctMsg" class="modal-msg"></div>
+  </div>
+</div>
+
+<script src="prompts.js?v=20260811"></script>
+<script src="report.js?v=20260811"></script>
+<script src="app.js?v=20260811"></script>
+<script>
+  /* 主题切换（独立页自带，持久化；嵌入工作台时也可单独切换） */
+  (function(){
+    var fab = document.getElementById('themeFab');
+    var pop = document.getElementById('themePop');
+    if(!fab || !pop) return;
+    fab.addEventListener('click', function(e){ e.stopPropagation(); pop.style.display = (pop.style.display === 'none') ? 'block' : 'none'; });
+    document.addEventListener('click', function(e){
+      if(pop.style.display !== 'none' && !pop.contains(e.target) && e.target !== fab) pop.style.display = 'none';
+    });
+    pop.querySelectorAll('.tp-opt').forEach(function(o){
+      o.addEventListener('click', function(){
+        var t = o.getAttribute('data-theme');
+        document.documentElement.setAttribute('data-theme', t);
+        try { localStorage.setItem('exam_theme', t); } catch(e){}
+        pop.style.display = 'none';
+      });
+    });
+    /* 接受父页（工作台）主题广播 */
+    window.addEventListener('message', function(e){
+      try {
+        var d = e.data;
+        if(d && d.type === 'theme' && d.theme){
+          document.documentElement.setAttribute('data-theme', d.theme);
+          try { localStorage.setItem('exam_theme', d.theme); } catch(err){}
+        }
+      } catch(err){}
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="green">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人工作台</title>
+<link rel="stylesheet" href="assets/theme.css">
+</head>
+<body>
+
+<div class="aurora"></div>
+<div class="vignette"></div>
+
+<div class="app" id="app">
+  <!-- 左侧导航 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand" id="brandHome" title="回到主页">工作台</div>
+    <nav class="nav" id="nav">
+      <button class="nav-item" data-module="links">工作系统 / 链接</button>
+      <button class="nav-item" data-module="materials">销售素材库</button>
+      <button class="nav-item" data-module="report">规划报告解读</button>
+      <button class="nav-item" data-module="exam">试卷分析</button>
+      <button class="nav-item" data-module="cpa">CPA 学校数据</button>
+      <button class="nav-item" data-module="sop">SOP 与备忘录</button>
+    </nav>
+  </aside>
+
+  <!-- 左分割线 + 收起 -->
+  <div class="divider divider-left" id="dividerLeft" title="拖动调整宽度">
+    <button class="divider-btn" id="collapseLeft" title="收起">‹</button>
+  </div>
+
+  <!-- 主区 -->
+  <div class="main">
+    <header class="topbar">
+      <input class="search" id="search" placeholder="搜索工具、链接、客户...">
+      <button id="openExt" class="open-ext" style="display:none;" title="新窗口打开">↗ 打开</button>
+      <button class="settings-btn" id="openSettings">设置</button>
+    </header>
+
+    <div class="workspace">
+      <!-- 中间工作区 -->
+      <section class="center" id="center">
+        <iframe id="toolFrame" src="about:blank" title="内置工具"></iframe>
+        <div id="centerContent" style="height:100%; overflow:auto;"></div>
+      </section>
+
+      <!-- 右分割线 + 收起 -->
+      <div class="divider divider-right" id="dividerRight" title="拖动调整宽度">
+        <button class="divider-btn" id="collapseRight" title="收起">›</button>
+      </div>
+
+      <!-- 右侧执行面板 -->
+      <aside class="rightpanel" id="rightpanel">
+        <div class="rp-header">今日执行</div>
+        <div class="rp-body">
+          <div>
+            <div class="rp-section-title">今日 SOP（每周重复）</div>
+            <div style="margin-bottom:10px;">
+              <button class="btn ghost" id="uploadSopBtn">上传 SOP 文件</button>
+              <input type="file" id="sopFile" accept=".json,.md,.txt" style="display:none;">
+            </div>
+            <div class="timeline" id="sopTimeline"></div>
+          </div>
+          <div>
+            <div class="rp-section-title">备忘录（自动提前 5 分钟提醒）</div>
+            <button class="btn" id="addMemoBtn" style="margin-bottom:10px;">+ 添加事项</button>
+            <div id="memoList"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- 主题按钮 + 弹出面板 -->
+<button class="theme-fab" id="themeBtn" title="切换主题">🎨</button>
+<div class="theme-popover" id="themePopover">
+  <div class="tp-title">主题</div>
+  <div class="tp-options">
+    <div class="tp-option" data-theme="green"><span class="tp-dot green"></span>护眼绿</div>
+    <div class="tp-option" data-theme="dark"><span class="tp-dot dark"></span>暗夜</div>
+    <div class="tp-option" data-theme="morandi"><span class="tp-dot morandi"></span>莫兰迪</div>
+    <div class="tp-option" data-theme="pink"><span class="tp-dot pink"></span>粉橘</div>
+    <div class="tp-option" data-theme="blue"><span class="tp-dot blue"></span>科技蓝</div>
+  </div>
+</div>
+
+<!-- 设置弹窗 -->
+<div class="modal-mask" id="settingsMask">
+  <div class="modal">
+    <h3>设置</h3>
+    <div class="row">
+      <label>豆包 AI · API Key（仅存本机）</label>
+      <input class="input" id="setApiKey" type="password" placeholder="粘贴你的 API Key">
+    </div>
+    <div class="row">
+      <label>模型</label>
+      <select class="input" id="setModel">
+        <option value="doubao-pro">doubao-pro</option>
+        <option value="doubao-lite">doubao-lite</option>
+        <option value="doubao-vision">doubao-vision</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>飞书群机器人 Webhook（可选，提醒同步飞书）</label>
+      <input class="input" id="setFeishu" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/...">
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="setWeeklyClear" checked> 每周一自动清空上周备忘录及图片</label>
+    </div>
+    <div class="row" id="storageInfo" style="font-size:12px;color:var(--muted);"></div>
+    <div class="actions">
+      <button class="btn ghost" id="settingsCancel">取消</button>
+      <button class="btn" id="settingsSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 提醒弹窗 -->
+<div class="reminder-mask" id="reminderMask">
+  <div class="reminder">
+    <div class="r-title" id="reminderTitle">提醒</div>
+    <div class="r-body" id="reminderBody"></div>
+    <div class="r-actions">
+      <button class="btn ghost" id="reminderLater">稍后</button>
+      <button class="btn" id="reminderDone">完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 备忘录添加弹窗 -->
+<div class="modal-mask" id="memoMask">
+  <div class="modal">
+    <h3>添加备忘录</h3>
+    <div class="row">
+      <label>事项内容</label>
+      <textarea class="input" id="memoText" rows="3" placeholder="要提醒的内容..."></textarea>
+    </div>
+    <div class="row">
+      <label>提醒时间（系统自动提前 5 分钟弹出）</label>
+      <input class="input" id="memoTime" type="datetime-local">
+    </div>
+    <div class="row">
+      <label>图片（可选）</label>
+      <input class="input" id="memoImg" type="file" accept="image/*">
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="memoCancel">取消</button>
+      <button class="btn" id="memoSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加自定义链接弹窗 -->
+<div class="modal-mask" id="linkAddMask">
+  <div class="modal">
+    <h3>添加自定义链接</h3>
+    <div class="row">
+      <label>名称</label>
+      <input class="input" id="linkAddTitle" placeholder="例如：我的常用工具">
+    </div>
+    <div class="row">
+      <label>网址</label>
+      <input class="input" id="linkAddUrl" placeholder="https://...">
+    </div>
+    <div class="row">
+      <label>描述（可选）</label>
+      <input class="input" id="linkAddDesc" placeholder="简短说明...">
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="linkAddCancel">取消</button>
+      <button class="btn" id="linkAddSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

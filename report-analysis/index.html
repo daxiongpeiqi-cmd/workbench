@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="green">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>规划报告解读系统 · v2</title>
+<link rel="stylesheet" href="styles.css" />
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+</head>
+<body>
+<div class="aurora"></div>
+
+<!-- 主题切换 FAB -->
+<button class="theme-fab" id="themeBtn" title="切换主题">🎨</button>
+<div class="theme-popover" id="themePopover">
+  <div class="tp-title">主题</div>
+  <div class="tp-opts">
+    <div class="tp-option" data-theme="green">青绿</div>
+    <div class="tp-option" data-theme="dark">暗夜</div>
+    <div class="tp-option" data-theme="morandi">莫兰迪</div>
+    <div class="tp-option" data-theme="pink">粉橘</div>
+    <div class="tp-option" data-theme="blue">蓝调</div>
+  </div>
+</div>
+
+<!-- ① 配置 gate -->
+<div id="gate" class="glass gate">
+  <h2>规划报告解读 · 配置</h2>
+  <p class="gate-tip">内置豆包（Doubao）API，Key 仅存本机浏览器，零成本使用。</p>
+  <label>API Key<input id="cfgKey" type="password" placeholder="粘贴你的豆包 Key" /></label>
+  <label>Base URL<input id="cfgBase" value="https://ark.cn-beijing.volces.com/api/v3" /></label>
+  <label>模型<input id="cfgModel" value="doubao-seed-evolving" /></label>
+  <label>视觉模型<input id="cfgVision" value="doubao-seed-evolving" /></label>
+  <label class="gate-row"><input id="cfgSpeed" type="checkbox" checked /> 速度优先（关闭深度思考）</label>
+  <button class="btn" id="cfgBtn">验证并进入</button>
+  <div id="cfgMsg" class="msg"></div>
+</div>
+
+<!-- ② 表单 setup -->
+<div id="setup" class="glass setup" style="display:none">
+  <h2>学业规划报告解读 · 信息采集</h2>
+  <div class="form-grid">
+    <label>年级
+      <select id="grade">
+        <option>高一</option><option>高二</option><option>高三</option>
+      </select>
+    </label>
+    <label>省份
+      <select id="province">
+        <option>北京</option><option>天津</option><option>上海</option><option>浙江</option><option>山东</option><option>海南</option>
+        <option>河北</option><option>辽宁</option><option>江苏</option><option>福建</option><option>湖北</option><option>湖南</option>
+        <option>广东</option><option>重庆</option><option>吉林</option><option>黑龙江</option><option>安徽</option><option>江西</option>
+        <option>广西</option><option>贵州</option><option>甘肃</option><option>内蒙古</option><option>山西</option><option>云南</option>
+        <option>陕西</option><option>河南</option><option>四川</option><option>宁夏</option><option>青海</option><option>新疆</option><option>西藏</option>
+      </select>
+    </label>
+    <label>高考模式
+      <select id="mode">
+        <option>3+3</option><option>3+1+2</option><option>传统文理</option>
+      </select>
+    </label>
+    <label>休息安排
+      <select id="rest">
+        <option>走读</option><option>周休</option><option>双周休</option><option>月休</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="sub-title">各科成绩（仅录当前分数）</div>
+  <div class="score-grid">
+    <div class="score-row"><input class="sc-subj" value="语文" /><input class="sc-val" type="number" placeholder="分" /></div>
+    <div class="score-row"><input class="sc-subj" value="数学" /><input class="sc-val" type="number" placeholder="分" /></div>
+    <div class="score-row"><input class="sc-subj" value="英语" /><input class="sc-val" type="number" placeholder="分" /></div>
+    <div class="score-row"><input class="sc-subj" value="物理" /><input class="sc-val" type="number" placeholder="分" /></div>
+    <div class="score-row"><input class="sc-subj" value="化学" /><input class="sc-val" type="number" placeholder="分" /></div>
+    <div class="score-row"><input class="sc-subj" value="生物" /><input class="sc-val" type="number" placeholder="分" /></div>
+    <div class="score-row"><input class="sc-subj" value="政治" /><input class="sc-val" type="number" placeholder="分" /></div>
+    <div class="score-row"><input class="sc-subj" value="历史" /><input class="sc-val" type="number" placeholder="分" /></div>
+    <div class="score-row"><input class="sc-subj" value="地理" /><input class="sc-val" type="number" placeholder="分" /></div>
+  </div>
+
+  <div class="form-grid">
+    <label id="comboWrap">选科组合<span class="hint"></span>
+      <input id="combo" placeholder="如 物化生 / 历政地" />
+    </label>
+    <label>目标院校（选填）
+      <input id="target" placeholder="填了才出现『目标院校前瞻』" />
+    </label>
+    <label>推荐讲师（选填）
+      <input id="teachers" placeholder="如 数学-胡源" />
+    </label>
+  </div>
+
+  <div class="sub-title">上传材料（选填，作为事实依据）</div>
+  <div class="up" data-kind="material">
+    <input type="file" accept="image/*,application/pdf" multiple hidden />
+    <div class="up-ic">📎</div>
+    <div class="up-tx">点击或拖拽上传成绩单 / 报告（PDF 或图片）</div>
+  </div>
+  <div id="fileList"></div>
+
+  <div class="setup-actions">
+    <button class="btn" id="genBtn">生成规划报告</button>
+    <button class="btn btn-ghost" id="editCfg">修改 Key</button>
+  </div>
+  <div id="progress" class="progress"></div>
+  <div id="live-stream" class="live-stream" style="display:none">
+    <div class="live-head">实时生成 <span id="live-stats">0 字</span></div>
+    <pre id="live-body"></pre>
+  </div>
+</div>
+
+<!-- ③ 报告页 -->
+<div id="reportPage" style="display:none">
+  <div class="report-bar">
+    <button class="btn btn-ghost" id="backBtn">← 返回修改</button>
+    <button class="btn" id="correctBtn">✏️ 修正/补充</button>
+    <button class="btn btn-gold" id="exportBtn">📸 保存为图片</button>
+  </div>
+  <div id="capture-area" class="report-screen"></div>
+  <!-- 离屏导出版（金榜捷报风）：导出截图用 -->
+  <div id="export-area" class="report-export"></div>
+</div>
+
+<!-- 修正弹窗 -->
+<div id="correctModal" class="modal-mask" style="display:none">
+  <div class="modal glass">
+    <h3>修正 / 补充</h3>
+    <p class="modal-tip">例如：把数学点评改温和些；或补一句"高二下学期进入一轮"的提醒。</p>
+    <textarea id="correctInput" rows="4" placeholder="输入你的修正意见…"></textarea>
+    <div id="correctMsg" class="msg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="correctClose">取消</button>
+      <button class="btn" id="correctSubmit">重新生成</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="data.js"></script>
+<script src="cases.js"></script>
+<script src="teachers.js"></script>
+<script src="prompts.js"></script>
+<script src="report.js"></script>
+<script src="app.js"></script>
+<script>
+// 主题切换 + 接受工作台广播
+(function () {
+  const root = document.documentElement;
+  const btn = document.getElementById("themeBtn");
+  const pop = document.getElementById("themePopover");
+  const KEY = "report_plan_theme_v1";
+  function apply(t) { root.setAttribute("data-theme", t); try { localStorage.setItem(KEY, t); } catch (e) {} }
+  const saved = (function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } })();
+  if (saved) apply(saved);
+  btn.addEventListener("click", e => { e.stopPropagation(); pop.classList.toggle("show"); });
+  document.addEventListener("click", e => { if (!pop.contains(e.target) && e.target !== btn) pop.classList.remove("show"); });
+  pop.querySelectorAll(".tp-option").forEach(o => o.addEventListener("click", () => { apply(o.dataset.theme); pop.classList.remove("show"); }));
+
+  // 接受工作台主题广播
+  window.addEventListener("message", e => {
+    if (e.data && e.data.type === "theme" && e.data.theme) apply(e.data.theme);
+  });
+
+  // 导出图片（截离屏导出版 export-area）
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const area = document.getElementById("export-area");
+    if (!window.html2canvas) { alert("导出库未加载，请检查网络后重试"); return; }
+    html2canvas(area, { backgroundColor: "#fbf7ef", scale: 2 }).then(canvas => {
+      const a = document.createElement("a");
+      a.download = "学业规划报告.png";
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    }).catch(err => alert("导出失败：" + err.message));
+  });
+})();
+</script>
+</body>
+</html>
