@@ -36,7 +36,7 @@
   }
 
   /* ---------------- 设置读写 ---------------- */
-  const DEFAULT_SETTINGS = { apiKey: '', model: 'doubao-pro', feishu: '', weeklyClear: true };
+  const DEFAULT_SETTINGS = { apiKey: '', model: 'doubao-pro', feishu: '', weeklyClear: true, sideScale: 1 };
   function getSettings() {
     try { return Object.assign({}, DEFAULT_SETTINGS, JSON.parse(LS.getItem('wb_settings') || '{}')); }
     catch (e) { return Object.assign({}, DEFAULT_SETTINGS); }
@@ -673,6 +673,16 @@
     });
   }
 
+  /* ---------------- 侧栏字号缩放 ---------------- */
+  function applySideScale(v) {
+    const scale = (typeof v === 'number' && v > 0) ? v : 1;
+    document.documentElement.style.setProperty('--side-scale', String(scale));
+    const sp = document.getElementById('setSideScale');
+    const sv = document.getElementById('sideScaleVal');
+    if (sp && document.activeElement !== sp) sp.value = String(Math.round(scale * 100));
+    if (sv) sv.textContent = Math.round(scale * 100) + '%';
+  }
+
   /* ---------------- 设置弹窗 ---------------- */
   $('#openSettings').addEventListener('click', () => {
     const s = getSettings();
@@ -680,17 +690,23 @@
     $('#setModel').value = s.model;
     $('#setFeishu').value = s.feishu;
     $('#setWeeklyClear').checked = s.weeklyClear;
+    applySideScale(s.sideScale);
+    const sp = document.getElementById('setSideScale');
+    if (sp) sp.addEventListener('input', () => applySideScale((parseInt(sp.value, 10) || 100) / 100));
     updateStorageInfo();
     showMask('#settingsMask');
   });
-  $('#settingsCancel').addEventListener('click', () => hideMask('#settingsMask'));
+  $('#settingsCancel').addEventListener('click', () => { applySideScale(getSettings().sideScale); hideMask('#settingsMask'); });
   $('#settingsSave').addEventListener('click', () => {
     const s = getSettings();
     s.apiKey = $('#setApiKey').value.trim();
     s.model = $('#setModel').value;
     s.feishu = $('#setFeishu').value.trim();
     s.weeklyClear = $('#setWeeklyClear').checked;
+    const sp = document.getElementById('setSideScale');
+    s.sideScale = (sp ? (parseInt(sp.value, 10) || 100) / 100 : 1);
     setSettings(s);
+    applySideScale(s.sideScale);
     hideMask('#settingsMask');
     alert('设置已保存到本机。');
   });
@@ -757,6 +773,7 @@
   function init() {
     loadWidths();
     applyTheme(LS.getItem('wb_theme') || 'green');
+    applySideScale(getSettings().sideScale);
     checkWeeklyClear();
     renderSopTimeline();
     renderMemos();
