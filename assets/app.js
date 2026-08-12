@@ -346,24 +346,108 @@
 
   /* ---------------- SOP ---------------- */
   const WD = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '日': 0, '天': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 0 };
+  function pad(n) { return String(n).padStart(2, '0'); }
+  // 提取时间：支持 HH:MM / H:MM / H点M分 / H点 / 上午9点 / 9-10点 / 14:00-15:00
+  function findTime(s) {
+    let m = s.match(/(\d{1,2}):(\d{2})\s*[-~到至]\s*(\d{1,2}):(\d{2})/);
+    if (m) return { h: +m[1], mi: +m[2], raw: m[0] };
+    m = s.match(/(\d{1,2})\s*[-~到至]\s*(\d{1,2})\s*点/);
+    if (m) return { h: +m[1], mi: 0, raw: m[0] };
+    m = s.match(/(上午|下午|早上|早晨|中午|傍晚|晚上|凌晨)?\s*(\d{1,2})\s*点\s*(\d{1,2})?\s*分?/);
+    if (m && m[2]) {
+      let h = +m[2]; const mi = m[3] ? +m[3] : 0; const ap = m[1];
+      if (ap === '下午' || ap === '傍晚' || ap === '晚上') { if (h < 12) h += 12; }
+      else if (ap === '中午') h = 12;
+      return { h, mi, raw: m[0] };
+    }
+    m = s.match(/(\d{1,2}):(\d{2})/);
+    if (m) return { h: +m[1], mi: +m[2], raw: m[0] };
+    return null;
+  }
+  function findWeekday(s) {
+    let m = s.match(/周([一二三四五六日天])/) || s.match(/星期([一二三四五六日天])/);
+    if (m) return WD[m[1]];
+    m = s.match(/星期([1-7])/) || s.match(/周([1-7])/);
+    if (m) return WD[m[1]];
+    return null; // 每天/每日/无星期 -> 每日
+  }
+  const WD_STRIP = /(周[一二三四五六日天]|星期[一二三四五六日天1-7]|每天|每日|全周|工作日|周一到周日|周一至周日|周一~周日)/g;
+  const AMPM_STRIP = /(上午|下午|早上|早晨|中午|傍晚|晚上|凌晨)/g;
   function parseSop(text) {
     const items = [];
     const lines = text.split(/\r?\n/);
-    const timeRe = /(\d{1,2}):(\d{2})/;
-    const wdRe = /周([一二三四五六日天0-9])|星期([一二三四五六日天])/;
+    let cur = null;
+    const commit = () => {
+      if (cur && (cur.time || cur.text)) {
+        if (!cur.text) cur.text = 'SOP 事项';
+        items.push(cur);
+      }
+      cur = null;
+    };
     for (const raw of lines) {
-      const line = raw.trim();
-      if (!line) continue;
-      const tm = line.match(timeRe);
-      if (!tm) continue;
-      let weekday = null;
-      const wm = line.match(wdRe);
-      if (wm) { const k = wm[1] || wm[2]; if (WD[k] !== undefined) weekday = WD[k]; }
-      let txt = line.replace(timeRe, '').replace(wdRe, '').replace(/^[#\-*•\d\.\s、]+/, ' ').replace(/\s+/g, ' ').trim();
-      if (!txt) txt = 'SOP 事项';
-      items.push({ weekday, time: `${tm[1].padStart(2, '0')}:${tm[2]}`, text: txt });
+      const isList = /^\s*[-*•]\s+/.test(raw) || /^\s*\d+[.)]\s+/.test(raw) || /^\s*#+\s+/.test(raw);
+      const clean = raw.replace(/^\s*#+\s*/, '').replace(/^\s*[-*•]\s+/, '').replace(/^\s*\d+[.)]\s+/, '').trim();
+      if (!clean) continue; // 空行：保持当前条目打开
+      const t = findTime(clean);
+      const wd = findWeekday(clean);
+      if (t) {
+        commit();
+        const txt = clean
+          .replace(t.raw, '')
+          .replace(AMPM_STRIP, '')
+          .replace(WD_STRIP, '')
+          .replace(/^[\s、,，.。\-*•]+/, '')
+          .replace(/\s+/g, ' ').trim();
+        cur = { weekday: wd, time: pad(t.h) + ':' + pad(t.mi), text: txt };
+      } else if (cur && (isList || /^\s+/.test(raw))) {
+        // 续行（子项 / 缩进说明）并入当前条目
+        if (clean) cur.text = (cur.text ? cur.text + '；' : '') + clean.replace(AMPM_STRIP, '').replace(WD_STRIP, '').replace(/\s+/g, ' ').trim();
+      }
+      // 其余独立行（如纯标题「## 周二」）忽略，避免误建节点
     }
+    commit();
     return items;
+  }
+  // 轻量 markdown -> HTML（标题/列表/表格/引用/粗斜体/行内代码/链接）
+  function renderMarkdown(md) {
+    const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const inline = (s) => {
+      s = esc(s);
+      s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+      s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+      s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+      s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      return s;
+    };
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '', i = 0, listType = null;
+    const closeList = () => { if (listType) { html += '</' + listType + '>'; listType = null; } };
+    while (i < lines.length) {
+      const line = lines[i];
+      if (/^```/.test(line)) { closeList(); let code = ''; i++; while (i < lines.length && !/^```/.test(lines[i])) { code += lines[i] + '\n'; i++; } i++; html += '<pre class="md-pre"><code>' + esc(code) + '</code></pre>'; continue; }
+      if (/\|/.test(line) && i + 1 < lines.length && /^\s*\|?[\s:|-]+\|?\s*$/.test(lines[i + 1])) {
+        closeList();
+        const splitRow = (r) => r.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map((c) => c.trim());
+        const headers = splitRow(line); i += 2; const rows = [];
+        while (i < lines.length && /\|/.test(lines[i])) { rows.push(splitRow(lines[i])); i++; }
+        html += '<table class="md-table"><thead><tr>' + headers.map((h) => '<th>' + inline(h) + '</th>').join('') + '</tr></thead><tbody>' + rows.map((r) => '<tr>' + r.map((c) => '<td>' + inline(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+        continue;
+      }
+      const hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) { closeList(); const l = hm[1].length; html += '<h' + l + ' class="md-h' + l + '">' + inline(hm[2]) + '</h' + l + '>'; i++; continue; }
+      if (/^(\*\*\*|---|___)\s*$/.test(line)) { closeList(); html += '<hr class="md-hr">'; i++; continue; }
+      if (/^>\s?/.test(line)) { closeList(); let q = ''; while (i < lines.length && /^>\s?/.test(lines[i])) { q += lines[i].replace(/^>\s?/, '') + ' '; i++; } html += '<blockquote class="md-quote">' + inline(q) + '</blockquote>'; continue; }
+      const lm = line.match(/^\s*([-*•])\s+(.*)$/) || line.match(/^\s*(\d+)[.)]\s+(.*)$/);
+      if (lm) { const want = /\d/.test(lm[1]) ? 'ol' : 'ul'; if (listType !== want) { closeList(); html += '<' + want + ' class="md-' + want + '">'; listType = want; } html += '<li>' + inline(lm[2]) + '</li>'; i++; continue; }
+      if (!line.trim()) { closeList(); i++; continue; }
+      closeList(); let p = line; i++;
+      while (i < lines.length && lines[i].trim() && !/^(#{1,6}\s|>\s?|\s*[-*•]\s|\s*\d+[.)]\s|```)/.test(lines[i]) && !/^\s*\|?[\s:|-]+\|?\s*$/.test(lines[i])) { p += '<br>' + lines[i]; i++; }
+      html += '<p class="md-p">' + inline(p) + '</p>';
+    }
+    closeList();
+    return html;
   }
   function getSop() {
     try { return JSON.parse(LS.getItem('wb_sop') || 'null'); } catch (e) { return null; }
@@ -398,12 +482,11 @@
     const content = $('#centerContent');
     let html = '<div style="padding:20px;max-width:760px;margin:0 auto;">';
     html += '<div style="font-size:18px;font-weight:700;margin-bottom:4px;">我的 SOP</div>';
-    html += '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;">通用版每周重复执行；右侧可上传更新，具体内容每周手动替换。</div>';
+    html += '<div style="font-size:12px;color:var(--muted);margin-bottom:14px;">左侧时间轴为自动提取的定时节点（用于弹窗提醒）；下方为完整文档渲染。通用版每周重复执行；右侧可上传更新，具体内容每周手动替换。</div>';
     if (!sop || !sop.raw) {
       html += '<div class="card" style="color:var(--muted);">尚未上传 SOP 文件。点击右侧「上传 SOP 文件」选择 .md / .txt / .json。</div>';
     } else {
-      const esc = sop.raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      html += `<div class="card" style="white-space:pre-wrap;line-height:1.7;font-size:13px;">${esc}</div>`;
+      html += `<div class="card md-card">${renderMarkdown(sop.raw)}</div>`;
     }
     html += '</div>';
     content.innerHTML = html;
