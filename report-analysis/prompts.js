@@ -104,6 +104,9 @@ ${ctx.provHint || ""}
   } else if (!ctx.scoresEntered && ctx.material) {
     s += `\n注意：未提供成绩，严禁引用/假设/捏造任何分数，仅以【上传材料】内容为据。`;
   }
+  if (ctx.extraInfo) {
+    s += `\n\n【附加要求 / 特殊备注】\n${ctx.extraInfo}\n请严格参考以上附加要求调整语气、侧重和输出细节。`;
+  }
   return s;
 }
 

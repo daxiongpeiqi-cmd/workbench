@@ -4,8 +4,8 @@
 const CFG_STORE = "report_plan_cfg_v1";
 const DEFAULTS = {
   baseUrl: "https://ark.cn-beijing.volces.com/api/v3",
-  model: "doubao-seed-evolving",
-  vision: "doubao-seed-evolving",
+  model: "doubao-seed-2-1-turbo-260628",
+  vision: "doubao-seed-2-1-turbo-260628",
   speed: true
 };
 let ARK = { key: "", baseUrl: "", model: "", vision: "" };
@@ -289,6 +289,7 @@ async function onGenerate() {
   const comb = document.getElementById("combo").value.trim();
   const target = document.getElementById("target").value.trim();
   const teachers = document.getElementById("teachers").value.trim();
+  const extraInfo = document.getElementById("extraInfo").value.trim();
   const { text: scoreText, entered: scoresEntered } = collectScores();
 
   // 分数门控提示（仍允许生成通用建议）
@@ -303,7 +304,7 @@ async function onGenerate() {
     if (uploads.material.length) { material = await filesToText(uploads.material, "material"); }
 
     const ctx = {
-      grade, prov, mode, rest, comb, target, teachers,
+      grade, prov, mode, rest, comb, target, teachers, extraInfo,
       scoresEntered, scoreText,
       material,
       provHint: buildProvHint(prov, mode)
@@ -319,9 +320,9 @@ async function onGenerate() {
       { role: "user", content: reportUser(ctx) }
     ], t => { setProgress("② 生成中… 已生成 " + t.length + " 字"); appendLiveStream(t); }, 0.5, 16000, extra, true);
 
-    const res = extractJSON(raw);
+    const res = await completeJSONIfTruncated(raw, ctx, extra);
     if (!res.ok || !res.data || !res.data.portrait)
-      throw new Error("未返回可解析的报告 JSON（" + (res.reason || "未知") + "，已生成 " + (raw||"").length + " 字）。建议：①关闭速度优先；②切更大 pro 模型；③重试。");
+      throw new Error("未返回可解析的报告 JSON（" + (res.reason || "未知") + "，已生成 " + (res.raw||"").length + " 字）。建议：①关闭速度优先；②切更大 pro 模型；③重试。");
 
     const data = res.data;
     data.meta = { grade, prov, mode, rest, comb, target, teachers, scoresEntered };
@@ -370,7 +371,18 @@ async function submitCorrect() {
       { role: "user", content: "【修正意见】\n" + input + "\n\n【当前报告 JSON】\n" + cur + "\n\n请修订并输出完整 JSON：" }
     ], t => { msg.textContent = "重新生成中… 已生成 " + t.length + " 字"; }, 0.5, 16000, extra, true);
     const res = extractJSON(raw);
-    if (!res.ok || !res.data || !res.data.portrait) throw new Error("未解析到修正结果（" + (res.reason || "未知") + "）");
+    if (!res.ok || !res.data || !res.data.portrait) {
+      // 修正结果也可能截断，尝试一次简单续写
+      const fixed = await completeJSONIfTruncated(raw, CURRENT_REPORT.meta || {}, extra);
+      if (fixed.ok && fixed.data && fixed.data.portrait) {
+        fixed.data.meta = CURRENT_REPORT.meta;
+        CURRENT_REPORT = fixed.data;
+        renderBoth(fixed.data);
+        closeCorrect(); setProgress("");
+        return;
+      }
+      throw new Error("未解析到修正结果（" + (res.reason || "未知") + "）");
+    }
     res.data.meta = CURRENT_REPORT.meta;
     CURRENT_REPORT = res.data;
     renderBoth(res.data);
@@ -382,3 +394,33 @@ async function submitCorrect() {
 
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 function setProgress(t) { const el = document.getElementById("progress"); if (el) el.textContent = t; }
+
+// 如果 JSON 被截断，用「续写」方式让模型接着输出
+async function completeJSONIfTruncated(raw, ctx, extra) {
+  if (!raw || raw.length < 2) return { ok: false, raw };
+  let res = extractJSON(raw);
+  if (res.ok && res.data && res.data.portrait) return { ok: true, data: res.data, raw };
+
+  // 还没好：尝试续写（最多 2 次）
+  let current = raw;
+  for (let i = 1; i <= 2; i++) {
+    const tail = current.slice(-120);
+    const isInStr = /(?<!\\)"[^"]*$/.test(tail) || /\\$/.test(tail);
+    const prompt = isInStr
+      ? `上面 JSON 在字符串中被截断，请先安全闭合当前字符串（补 \"），然后继续输出后续字段，不要重复已输出内容，仅输出截断处之后的文本。`
+      : `上面 JSON 未闭合（被截断），请从当前截断处继续输出剩余部分，不要重复已输出内容，仅输出后续文本，最终整体必须是一个合法 JSON 对象。`;
+
+    setProgress(`② 检测到 JSON 截断，正在第 ${i} 次续写…`);
+    const cont = await chatStream(ARK.model, [
+      { role: "system", content: REPORT_SYSTEM },
+      { role: "user", content: reportUser(ctx) },
+      { role: "assistant", content: current },
+      { role: "user", content: prompt }
+    ], null, 0.4, 12000, extra, false); // 续写关闭 json_object，让模型自由补全
+
+    current += cont;
+    res = extractJSON(current);
+    if (res.ok && res.data && res.data.portrait) return { ok: true, data: res.data, raw: current };
+  }
+  return { ok: false, raw: current, reason: res.reason || "JSON 不闭合（疑似被截断）" };
+}

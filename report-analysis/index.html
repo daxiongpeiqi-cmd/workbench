@@ -29,8 +29,8 @@
   <p class="gate-tip">内置豆包（Doubao）API，Key 仅存本机浏览器，零成本使用。</p>
   <label>API Key<input id="cfgKey" type="password" placeholder="粘贴你的豆包 Key" /></label>
   <label>Base URL<input id="cfgBase" value="https://ark.cn-beijing.volces.com/api/v3" /></label>
-  <label>模型<input id="cfgModel" value="doubao-seed-evolving" /></label>
-  <label>视觉模型<input id="cfgVision" value="doubao-seed-evolving" /></label>
+  <label>模型<input id="cfgModel" value="doubao-seed-2-1-turbo-260628" /></label>
+  <label>视觉模型<input id="cfgVision" value="doubao-seed-2-1-turbo-260628" /></label>
   <label class="gate-row"><input id="cfgSpeed" type="checkbox" checked /> 速度优先（关闭深度思考）</label>
   <button class="btn" id="cfgBtn">验证并进入</button>
   <div id="cfgMsg" class="msg"></div>
@@ -90,6 +90,10 @@
       <input id="teachers" placeholder="如 数学-胡源" />
     </label>
   </div>
+
+  <label>附加信息 / 特殊要求（选填）
+    <textarea id="extraInfo" rows="3" placeholder="如：家长沟通风格偏温和 / 重点强调数学 / 不要出现焦虑表述 / 需要突出暑假规划…"></textarea>
+  </label>
 
   <div class="sub-title">上传材料（选填，作为事实依据）</div>
   <div class="up" data-kind="material">
