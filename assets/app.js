@@ -215,7 +215,8 @@
   const IFRAME_MODULES = {
     report: { src: 'report-analysis/index.html', ext: false },
     exam:   { src: 'exam-analysis/index.html', ext: true },
-    cpa:    { src: 'tools/cpa.html', ext: false }
+    // CPA 学校数据：直链独立仓库 cpa-school-system（单一数据源，用户在独立仓库更新即自动同步，无需再手动拷贝）
+    cpa:    { src: 'https://daxiongpeiqi-cmd.github.io/cpa-school-system/', ext: true }
   };
   let currentModule = 'home';
 
