@@ -122,6 +122,13 @@
         }).catch(() => {});
       } catch (e) {}
     }
+    // 路线A：浏览器桌面通知（需用户已在设置中授权）
+    try {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const n = new Notification(opts.title || '提醒', { body: opts.text || '', tag: 'wb-reminder' });
+        n.onclick = () => { try { window.focus(); } catch (e) {} n.close(); };
+      }
+    } catch (e) {}
   }
   $('#reminderDone').addEventListener('click', () => {
     if (currentReminder && currentReminder.memoId) markMemoDone(currentReminder.memoId);
@@ -683,6 +690,25 @@
     if (sv) sv.textContent = Math.round(scale * 100) + '%';
   }
 
+  /* ---------------- 浏览器桌面通知授权 ---------------- */
+  function refreshNotifyBtn() {
+    const btn = document.getElementById('setNotifyBtn');
+    if (!btn) return;
+    if (!('Notification' in window)) { btn.textContent = '浏览器不支持'; btn.disabled = true; return; }
+    const p = Notification.permission;
+    if (p === 'granted') { btn.textContent = '已开启 ✓'; btn.disabled = true; }
+    else if (p === 'denied') { btn.textContent = '已被拦截，去地址栏允许'; btn.disabled = true; }
+    else { btn.textContent = '开启浏览器通知'; btn.disabled = false; }
+  }
+  (function bindNotifyBtn() {
+    const nb = document.getElementById('setNotifyBtn');
+    if (!nb) return;
+    nb.addEventListener('click', () => {
+      if (!('Notification' in window)) { alert('当前浏览器不支持桌面通知。'); return; }
+      Notification.requestPermission().then(() => refreshNotifyBtn()).catch(() => {});
+    });
+  })();
+
   /* ---------------- 设置弹窗 ---------------- */
   $('#openSettings').addEventListener('click', () => {
     const s = getSettings();
@@ -693,6 +719,7 @@
     applySideScale(s.sideScale);
     const sp = document.getElementById('setSideScale');
     if (sp) sp.addEventListener('input', () => applySideScale((parseInt(sp.value, 10) || 100) / 100));
+    refreshNotifyBtn();
     updateStorageInfo();
     showMask('#settingsMask');
   });
