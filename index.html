@@ -121,6 +121,23 @@
       <label>浏览器桌面通知（后台标签页也会弹系统通知）</label>
       <button class="btn" id="setNotifyBtn" style="white-space:nowrap;">开启浏览器通知</button>
     </div>
+    <div class="row" style="border-top:1px dashed var(--border);padding-top:12px;margin-top:4px;">
+      <label>个人资源库备份（防浏览器崩溃丢失）</label>
+      <div id="backupCtrls" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+        <button class="btn" id="setAutoBackupBtn">开启自动备份</button>
+        <button class="btn ghost" id="setBackupNowBtn" style="display:none;">立即备份</button>
+        <button class="btn ghost" id="setCheckUpdateBtn" style="display:none;">检查更新</button>
+        <button class="btn ghost" id="setImportBtn">导入备份</button>
+        <button class="btn ghost" id="setExportBtn">导出备份文件</button>
+        <input type="file" id="backupFile" accept=".json" style="display:none;">
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;margin-top:8px;font-size:13px;color:var(--muted);flex-wrap:wrap;">
+        <span>导入方式：</span>
+        <label style="cursor:pointer;"><input type="radio" name="backupMode" value="merge" checked> 合并（不丢已有，只补新）</label>
+        <label style="cursor:pointer;"><input type="radio" name="backupMode" value="overwrite"> 覆盖（用备份完全替换）</label>
+      </div>
+      <div id="backupStatus" style="font-size:12px;color:var(--muted);margin-top:8px;"></div>
+    </div>
     <div class="row" id="storageInfo" style="font-size:12px;color:var(--muted);"></div>
     <div class="actions">
       <button class="btn ghost" id="settingsCancel">取消</button>

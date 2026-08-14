@@ -299,7 +299,7 @@
   function getCustomLinks() {
     try { return JSON.parse(LS.getItem('wb_custom_links') || 'null') || { systems: [], materials: [] }; } catch (e) { return { systems: [], materials: [] }; }
   }
-  function setCustomLinks(o) { LS.setItem('wb_custom_links', JSON.stringify(o)); }
+  function setCustomLinks(o) { LS.setItem('wb_custom_links', JSON.stringify(o)); if (LS.getItem('wb_auto_backup') === '1') writeBackupFile(); }
   let CUSTOM_LINKS = getCustomLinks();
   function mergeLinks() {
     return {
@@ -690,6 +690,122 @@
     if (sv) sv.textContent = Math.round(scale * 100) + '%';
   }
 
+  /* ---------------- 个人资源库备份 ---------------- */
+  const BACKUP_FILE = 'workbench-links.json';
+  let backupDirHandle = null;
+  function fsApiSupported() { return typeof window.showDirectoryPicker === 'function'; }
+  function setBackupStatus(t) { const el = document.getElementById('backupStatus'); if (el) el.textContent = t; }
+  async function ensureBackupDir() {
+    if (backupDirHandle) {
+      try { const p = await backupDirHandle.queryPermission({ mode: 'readwrite' }); if (p === 'granted') return backupDirHandle; } catch (e) {}
+    }
+    if (LS.getItem('wb_auto_backup') !== '1') return null;
+    try { const h = await window.showDirectoryPicker(); backupDirHandle = h; return h; } catch (e) { return null; }
+  }
+  async function writeBackupFile() {
+    const dir = await ensureBackupDir();
+    if (!dir) return false;
+    try {
+      const fh = await dir.getFileHandle(BACKUP_FILE, { create: true });
+      const w = await fh.createWritable();
+      await w.write(JSON.stringify(getCustomLinks(), null, 2));
+      await w.close();
+      const f = await fh.getFile();
+      LS.setItem('wb_backup_mtime', String(f.lastModified));
+      return true;
+    } catch (e) { return false; }
+  }
+  async function readBackupFile() {
+    const dir = await ensureBackupDir();
+    if (!dir) return null;
+    try {
+      const fh = await dir.getFileHandle(BACKUP_FILE);
+      const f = await fh.getFile();
+      if (!f.size) return null;
+      return { data: JSON.parse(await f.text()), mtime: f.lastModified };
+    } catch (e) { return null; }
+  }
+  function mergeLinksObj(a, b) {
+    const uniq = (arr) => { const m = new Map(); (arr || []).forEach((x) => { if (x && x.url) m.set(x.url, x); }); return [...m.values()]; };
+    return { systems: uniq([...(a.systems || []), ...(b.systems || [])]), materials: uniq([...(a.materials || []), ...(b.materials || [])]) };
+  }
+  function applyImported(data, mode) {
+    const cur = getCustomLinks();
+    const next = mode === 'overwrite' ? (data || { systems: [], materials: [] }) : mergeLinksObj(cur, data || {});
+    setCustomLinks(next);
+    CUSTOM_LINKS = next;
+    LINKS = mergeLinks();
+    if (currentModule === 'links' || currentModule === 'materials') renderLinks(currentModule);
+  }
+  async function detectAndPrompt() {
+    const bk = await readBackupFile();
+    if (!bk) { setBackupStatus('未检测到备份文件（该文件夹暂无 ' + BACKUP_FILE + '）。'); return; }
+    const last = Number(LS.getItem('wb_backup_mtime') || 0);
+    const localStr = JSON.stringify(getCustomLinks());
+    const fileStr = JSON.stringify(bk.data);
+    if (fileStr !== localStr && bk.mtime > last) {
+      if (confirm('检测到备份文件有更新（' + new Date(bk.mtime).toLocaleString() + '）。\n是否用备份覆盖当前资源库？\n点「取消」保留当前本地内容。')) {
+        setCustomLinks(bk.data); CUSTOM_LINKS = bk.data; LINKS = mergeLinks();
+        if (currentModule === 'links' || currentModule === 'materials') renderLinks(currentModule);
+        setBackupStatus('已从备份恢复最新版本。');
+      } else { setBackupStatus('已跳过恢复，保留当前本地内容。'); }
+    } else { setBackupStatus('备份已是最新（' + new Date(bk.mtime).toLocaleString() + '）。'); }
+  }
+  function refreshBackupUI() {
+    const auto = fsApiSupported();
+    const ab = document.getElementById('setAutoBackupBtn');
+    const now = document.getElementById('setBackupNowBtn');
+    const chk = document.getElementById('setCheckUpdateBtn');
+    if (ab) { ab.style.display = auto ? '' : 'none'; ab.textContent = (LS.getItem('wb_auto_backup') === '1') ? '自动备份已开启 ✓' : '开启自动备份'; }
+    if (now) now.style.display = auto ? '' : 'none';
+    if (chk) chk.style.display = auto ? '' : 'none';
+  }
+  (function bindBackupBtns() {
+    const ab = document.getElementById('setAutoBackupBtn');
+    const now = document.getElementById('setBackupNowBtn');
+    const chk = document.getElementById('setCheckUpdateBtn');
+    const imp = document.getElementById('setImportBtn');
+    const exp = document.getElementById('setExportBtn');
+    const file = document.getElementById('backupFile');
+    if (ab) ab.addEventListener('click', async () => {
+      if (!fsApiSupported()) { alert('当前浏览器不支持文件夹备份（请用 Chrome / Edge）。可用「导出备份文件」手动保存。'); return; }
+      try {
+        const h = await window.showDirectoryPicker();
+        backupDirHandle = h; LS.setItem('wb_auto_backup', '1');
+        await writeBackupFile(); refreshBackupUI();
+        setBackupStatus('已开启自动备份，文件：' + BACKUP_FILE);
+        detectAndPrompt();
+      } catch (e) { /* 用户取消 */ }
+    });
+    if (now) now.addEventListener('click', async () => {
+      const ok = await writeBackupFile();
+      setBackupStatus(ok ? '已立即备份到 ' + BACKUP_FILE : '备份失败，请重新开启自动备份。');
+    });
+    if (chk) chk.addEventListener('click', () => detectAndPrompt());
+    if (imp) imp.addEventListener('click', () => file && file.click());
+    if (file) file.addEventListener('change', (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(String(reader.result));
+          const mode = (document.querySelector('input[name=backupMode]:checked') || {}).value || 'merge';
+          applyImported(data, mode);
+          alert('导入成功（' + (mode === 'overwrite' ? '覆盖' : '合并') + '模式）。');
+        } catch (err) { alert('文件解析失败，请确认是导出的备份 json。'); }
+      };
+      reader.readAsText(f);
+      e.target.value = '';
+    });
+    if (exp) exp.addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(getCustomLinks(), null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = BACKUP_FILE; a.click();
+      URL.revokeObjectURL(a.href);
+      setBackupStatus('已导出 ' + BACKUP_FILE + '（请妥善保存）。');
+    });
+  })();
+
   /* ---------------- 浏览器桌面通知授权 ---------------- */
   function refreshNotifyBtn() {
     const btn = document.getElementById('setNotifyBtn');
@@ -720,6 +836,8 @@
     const sp = document.getElementById('setSideScale');
     if (sp) sp.addEventListener('input', () => applySideScale((parseInt(sp.value, 10) || 100) / 100));
     refreshNotifyBtn();
+    refreshBackupUI();
+    setBackupStatus('');
     updateStorageInfo();
     showMask('#settingsMask');
   });
@@ -802,6 +920,7 @@
     applyTheme(LS.getItem('wb_theme') || 'green');
     applySideScale(getSettings().sideScale);
     checkWeeklyClear();
+    refreshBackupUI();
     renderSopTimeline();
     renderMemos();
     switchModule('home');
