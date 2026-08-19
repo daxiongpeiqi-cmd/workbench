@@ -89,11 +89,16 @@ const DIAG_SYSTEM = `你是一位经验丰富、严谨负责的一线教师兼�
 【输出格式硬约束】
 仅输出一个 JSON 对象。务必输出紧凑 JSON：不要缩进、不要换行、不要多余空格（key/value 之间不要空格，数组元素间不要空格）。不要任何解释性文字，不要 markdown 代码块包裹。结尾必须是一个 ｝ 并完整闭合。
 
+【严禁截断 —— 优先级指令】
+- 四个字段必须全部完整输出，缺一不可；尤其最后一项 parent_message 是面向家长的沟通话术，必须完整、不能少半句。
+- 若接近输出上限，请优先保证 parent_message 完整写完并正确闭合 JSON（宁可前面根因树/处方/计划再精简，也不能丢掉 parent_message）。
+- 禁止在 parent_message 末尾出现未闭合的引号或未闭合的 JSON 对象。
+
 【严控输出体积】
-- diagnosis.root_cause_tree 至多 6 条（按严重度排序）；
-- remediation_plan 至多 4 条；
-- first_month_plan 至多 4 周；
-- parent_message ≤ 400 字符（中文）/ 120 词（英文）。`;
+- diagnosis.root_cause_tree 至多 6 条（按严重度排序），每条 ≤ 80 字符；
+- remediation_plan 至多 4 条，每条 actions ≤ 3 项、每项 ≤ 40 字符；
+- first_month_plan 至多 4 周，每周 tasks ≤ 3 项、每项 ≤ 40 字符；
+- parent_message ≤ 400 字符（中文）/ 120 词（英文），控制在 300 中文字符左右最稳妥。`;
 
 function diagUser(p) {
   return `【学生背景】
@@ -117,6 +122,24 @@ ${p.score_kp_json}
 {"diagnosis":{"overview":"总评一段话(先说结论:整体处于什么水平,最该先补什么)","strengths":["优势1","优势2"],"weakness_summary":"薄弱点概括","root_cause_tree":[{"qid":"涉及题号","board":"板块","type":"题型","action":"失分动作","root_cause":"根因","severity":"高|中|低"}]},"remediation_plan":[{"target_kp":"针对的知识点","qids":["涉及题号"],"goal":"可衡量的目标","actions":["每天具体动作1","动作2"],"cycle":"时间窗,如8.1-8.14","resources":["所用资料/工具"],"check":"检测方式"}],"first_month_plan":[{"week":"第1周(开学前)","focus":"本周重点","tasks":["任务1","任务2"]}],"parent_message":"给家长的一段话(共情,说清孩子现状与可执行的下一步,自然带出'系统学习比碎片化自学更高效'的取向,但不要硬广;≤400字/120词)"}`;
 }
 
+// 4) parent_message 缺失兜底：第二步已完整但漏写/截断家长话术时，单独补一段
+const PARENT_MESSAGE_SYSTEM = `你是一位经验丰富的一线教师。学生已完成试卷诊断，所有诊断字段均存在，唯独"致家长的话"(parent_message)缺失或被截断。
+请你根据学生成绩、薄弱点、补救计划，写一段面向家长的沟通话术。
+要求：共情、客观、说清孩子现状与下一步可执行动作，自然带出"系统学习比碎片化自学更高效"的取向，但不要硬广、不要出现机构名/课程名。
+仅输出一个合法 JSON 对象：{"parent_message":"..."}。不要解释、不要 markdown 代码块。parent_message ≤ 400 字符（中文）/ 120 词（英文），控制在 300 中文字符左右。`;
+
+function parentMessageUser(p) {
+  return `【学生背景】
+姓名：${p.name}｜年级：${p.grade}｜学科：${p.subject}｜考试：${p.exam_name}
+
+【诊断摘要】
+${p.summary}
+
+【补救计划摘要】
+${p.planSummary}
+
+请仅输出 {"parent_message":"给家长的话"}：`;
+}
 // 从模型原始文本中尽力解析出 JSON 对象
 // 返回 { ok, data, reason }
 //  - ok=true: 成功解析

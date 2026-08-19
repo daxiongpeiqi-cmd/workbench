@@ -415,26 +415,49 @@ async function onGenerate() {
       kp_mastery: data1.kp_mastery,
       weak_signals: data1.weak_signals
     });
+    const diagCtx = {
+      name: profile.name, grade: profile.grade, subject: profile.subject,
+      exam_name: profile.exam_name, background: profile.background,
+      exam_text: examText, answer_text: answerText, student_answers: studentText,
+      score_kp_json
+    };
     const raw2 = await chatStream(ARK.model, [
       { role: "system", content: DIAG_SYSTEM },
-      { role: "user", content: diagUser({
-        name: profile.name, grade: profile.grade, subject: profile.subject,
-        exam_name: profile.exam_name, background: profile.background,
-        exam_text: examText, answer_text: answerText, student_answers: studentText,
-        score_kp_json
-      }) }
+      { role: "user", content: diagUser(diagCtx) }
     ], t => {
       setProgress("⑥ 第 2/2 步 诊断生成中… 已生成 " + t.length + " 字");
       appendLiveStream(t);
-    }, 0.4, 12000, extra, true);  // jsonMode=true：同上，强制合法 JSON 输出
+    }, 0.4, 16000, extra, true);  // jsonMode=true：同上，强制合法 JSON 输出；token 上限扩到 16k，降低截断概率
 
-    const extractRes2 = extractJSON(raw2);
-    if (!extractRes2.ok || !extractRes2.data || !extractRes2.data.diagnosis) {
-      const reason = extractRes2.reason || "未知";
-      const last = (raw2 || "").slice(-120).replace(/\s+/g, " ");
-      throw new Error("第 2 步（诊断方案）未返回可解析结果（" + reason + "，已生成 " + (raw2||"").length + " 字，末尾：…" + last + "）。请重试。");
+    const res2 = await completeJSONIfTruncated(raw2, diagCtx, extra);
+    if (!res2.ok || !res2.data || !res2.data.diagnosis) {
+      const reason = res2.reason || "未知";
+      const last = (res2.raw || "").slice(-120).replace(/\s+/g, " ");
+      throw new Error("第 2 步（诊断方案）未返回可解析结果（" + reason + "，已生成 " + (res2.raw||"").length + " 字，末尾：…" + last + "）。请重试。");
     }
-    const data2 = extractRes2.data;
+    const data2 = res2.data;
+
+    // 如果第二步 JSON 完整但漏掉/截断了 parent_message，用一次轻量补全兜底
+    if (!data2.parent_message || !String(data2.parent_message).trim()) {
+      try {
+        setProgress("⑥ 家长话术缺失，正在单独补全…");
+        const diagSummary = summarizeDiagnosisForParent(data2);
+        const planSummary = (data2.remediation_plan || []).map(r => (r.target_kp || "") + ":" + ((r.goal || "").slice(0, 40))).join("；");
+        const pmRaw = await chatStream(ARK.model, [
+          { role: "system", content: PARENT_MESSAGE_SYSTEM },
+          { role: "user", content: parentMessageUser({
+            name: profile.name, grade: profile.grade, subject: profile.subject, exam_name: profile.exam_name,
+            summary: diagSummary, planSummary
+          }) }
+        ], t => { setProgress("⑥ 家长话术补全中… 已生成 " + t.length + " 字"); appendLiveStream(t); }, 0.4, 1200, extra, false);
+        const pmRes = extractJSON(pmRaw);
+        if (pmRes.ok && pmRes.data && pmRes.data.parent_message) {
+          data2.parent_message = pmRes.data.parent_message;
+        }
+      } catch (e) {
+        // 补全失败不阻断，仍用原 data2 继续
+      }
+    }
 
     // 合并两步结果 → 完整报告（只取第二步的 4 个聚合字段，避免覆盖第一步的判分数据）
     const data = Object.assign({}, data1, {
@@ -646,6 +669,49 @@ function summarizeDiagnosis(d) {
   const kp = (d.kp_mastery || []).filter(k => k.level === "薄弱" || k.level === "未触及");
   if (kp.length) s += "薄弱知识点：" + kp.map(k => k.kp).join("、") + "\n";
   return s;
+}
+
+// 把诊断方案压缩成一段给"补全家长话术"用的轻量摘要（控制 token）
+function summarizeDiagnosisForParent(d) {
+  const diag = d.diagnosis || {};
+  let s = "";
+  if (diag.overview) s += "总评：" + String(diag.overview).slice(0, 120) + "\n";
+  if (diag.weakness_summary) s += "薄弱点：" + String(diag.weakness_summary).slice(0, 120) + "\n";
+  const rct = (diag.root_cause_tree || []).slice(0, 3);
+  if (rct.length) s += "主要根因：" + rct.map(r => (r.root_cause || "").slice(0, 40)).filter(Boolean).join("、") + "\n";
+  const kp = (d.kp_mastery || []).filter(k => k.level === "薄弱" || k.level === "未触及").slice(0, 5);
+  if (kp.length) s += "薄弱知识点：" + kp.map(k => k.kp).join("、") + "\n";
+  return s.trim();
+}
+
+// 如果 JSON 被截断，用「续写」方式让模型接着输出（最多 2 次）
+// 复用 DIAG_SYSTEM + diagUser(ctx)，关闭 json_object 让模型自由补全截断处
+async function completeJSONIfTruncated(raw, ctx, extra) {
+  if (!raw || raw.length < 2) return { ok: false, raw };
+  let res = extractJSON(raw);
+  if (res.ok && res.data && res.data.diagnosis) return { ok: true, data: res.data, raw };
+
+  let current = raw;
+  for (let i = 1; i <= 2; i++) {
+    const tail = current.slice(-120);
+    const isInStr = /(?<!\\)"[^"]*$/.test(tail) || /\\$/.test(tail);
+    const prompt = isInStr
+      ? `上面 JSON 在字符串中被截断，请先安全闭合当前字符串（补 \"），然后继续输出后续字段，不要重复已输出内容，仅输出截断处之后的文本。`
+      : `上面 JSON 未闭合（被截断），请从当前截断处继续输出剩余部分，不要重复已输出内容，仅输出后续文本，最终整体必须是一个合法 JSON 对象。`;
+
+    setProgress(`⑥ 检测到 JSON 截断，正在第 ${i} 次续写…`);
+    const cont = await chatStream(ARK.model, [
+      { role: "system", content: DIAG_SYSTEM },
+      { role: "user", content: diagUser(ctx) },
+      { role: "assistant", content: current },
+      { role: "user", content: prompt }
+    ], t => { setProgress("⑥ 续写中… 已生成 " + t.length + " 字"); appendLiveStream(t); }, 0.4, 12000, extra, false);
+
+    current += cont;
+    res = extractJSON(current);
+    if (res.ok && res.data && res.data.diagnosis) return { ok: true, data: res.data, raw: current };
+  }
+  return { ok: false, data: null, raw: current, reason: res.reason || "续写后仍无法解析" };
 }
 
 function setProgress(t) {
